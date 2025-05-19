@@ -1,0 +1,14 @@
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.GeneratedMSBuildEditorConfig.editorconfig
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.AssemblyInfoInputs.cache
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.AssemblyInfo.cs
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.csproj.CoreCompileInputs.cache
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0\Back-end.exe
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0\Back-end.deps.json
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0\Back-end.runtimeconfig.json
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0\Back-end.dll
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0\Back-end.pdb
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.dll
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\refint\Back-end.dll
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.pdb
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.genruntimeconfig.cache
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\ref\Back-end.dll
