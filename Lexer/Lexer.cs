@@ -29,78 +29,72 @@ namespace Wall_E
         {
             List<Token> tokens = new();
 
-            // Mientras no se llegue al final del código fuente
             while (!IsAtEnd())
             {
-                char c = Advance();
-
-                // Ignora espacios en blanco y detecta saltos de línea
-                if (char.IsWhiteSpace(c))
+                if (char.IsWhiteSpace(Peek()))
                 {
-                    if (c == '\n')
+                    if (Peek() == '\n')
                     {
                         _line++;
                         _newLineJustPassed = true;
                         tokens.Add(new Token(TokenType.NEWLINE, "\\n", _line));
                     }
+                    Advance();
                     continue;
                 }
-                // Identificadores, palabras clave y etiquetas
-                if (char.IsLetter(c) || c == '-')
+
+                if (char.IsLetter(Peek()) || Peek() == '-')
                 {
-                    // Lee una palabra completa (letras, dígitos o guiones)
                     string word = ReadWhile(ch => char.IsLetterOrDigit(ch) || ch == '-');
 
-                    // Si está al inicio de una línea, lo trata como etiqueta
                     if (_newLineJustPassed && (IsAtEnd() || Peek() == '\n'))
                     {
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
                         _newLineJustPassed = false;
-                        continue;
-                    }
-
-                    // Si no es etiqueta, verifica si es palabra clave o identificador
-                    tokens.Add(KeywordOrIdentifier(word));
-                    _newLineJustPassed = false;
-                }
-                // Números
-                else if (char.IsDigit(c))
-                {
-                    // Lee todos los dígitos consecutivos
-                    string number = ReadWhile(char.IsDigit);
-                    tokens.Add(new Token(TokenType.NUMBER, number, _line));
-                    _newLineJustPassed = false;
-                }
-                // Cadenas de texto entre comillas
-                else if (c == '"')
-                {
-                    // Lee hasta el cierre de comillas
-                    string str = ReadString();
-                    tokens.Add(new Token(TokenType.STRING, str, _line));
-                    _newLineJustPassed = false;
-                }
-                // Operadores y símbolos
-                else
-                {
-                    // Intenta reconocer el símbolo u operador
-                    Token token = RecognizeSymbolOrOperator(c);
-                    if (token != null)
-                    {
-                        tokens.Add(token);
-                        _newLineJustPassed = false;
                     }
                     else
                     {
-                        // Si no reconoce el símbolo, lo marca como desconocido
-                        tokens.Add(new Token(TokenType.UNKNOWN, c.ToString(), _line));
+                        tokens.Add(KeywordOrIdentifier(word));
+                        _newLineJustPassed = false;
                     }
+
+                    continue;
+                }
+
+                if (char.IsDigit(Peek()))
+                {
+                    string number = ReadWhile(char.IsDigit);
+                    tokens.Add(new Token(TokenType.NUMBER, number, _line));
+                    _newLineJustPassed = false;
+                    continue;
+                }
+
+                if (Peek() == '"')
+                {
+                    Advance(); // consumir la primera comilla
+                    string str = ReadString();
+                    tokens.Add(new Token(TokenType.STRING, str, _line));
+                    _newLineJustPassed = false;
+                    continue;
+                }
+
+                char c = Advance();
+                Token token = RecognizeSymbolOrOperator(c);
+                if (token != null)
+                {
+                    tokens.Add(token);
+                    _newLineJustPassed = false;
+                }
+                else
+                {
+                    tokens.Add(new Token(TokenType.UNKNOWN, c.ToString(), _line));
                 }
             }
 
-            // Al final, agrega un token de fin de archivo
             tokens.Add(new Token(TokenType.EOF, "", _line));
             return tokens;
         }
+
 
         // --------- Métodos auxiliares para el análisis léxico ---------
 
@@ -146,53 +140,76 @@ namespace Wall_E
             return sb.ToString();
         }
 
-        // Determina si una palabra es palabra clave o identificador
+        private static readonly Dictionary<string, TokenType> PalabrasClave = new()
+        {
+            { "Spawn", TokenType.SPAWN },
+            { "Color", TokenType.COLOR },
+            { "Size", TokenType.SIZE },
+            { "DrawLine", TokenType.DRAW_LINE },
+            { "DrawCircle", TokenType.DRAW_CIRCLE },
+            { "DrawRectangle", TokenType.DRAW_RECTANGLE },
+            { "Fill", TokenType.FILL },
+            { "Goto", TokenType.GOTO },
+
+            { "GetActualX", TokenType.GET_ACTUAL_X },
+            { "GetActualY", TokenType.GET_ACTUAL_Y },
+            { "GetCanvasSize", TokenType.GET_CANVAS_SIZE },
+            { "GetColorCount", TokenType.GET_COLOR_COUNT },
+            { "IsBrushColor", TokenType.IS_BRUSH_COLOR },
+            { "IsBrushSize", TokenType.IS_BRUSH_SIZE },
+            { "IsCanvasColor", TokenType.IS_CANVAS_COLOR },
+        };
+
         private Token KeywordOrIdentifier(string word)
         {
-            // Intenta convertir la palabra a un valor del enum TokenType
-            if (Enum.TryParse(typeof(TokenType), word.ToUpper(CultureInfo.InvariantCulture), out var tokenType))
+            if (PalabrasClave.TryGetValue(word, out var type))
             {
-                return new Token((TokenType)tokenType, word, _line);
+                return new Token(type, word, _line);
             }
-            // Si no es palabra clave, es un identificador
+
             return new Token(TokenType.IDENTIFIER, word, _line);
         }
+
+
+
 
         // Reconoce operadores y símbolos individuales o compuestos
         private Token RecognizeSymbolOrOperator(char c)
         {
             switch (c)
             {
-                case '=':
-                    // == o =
-                    return Match('=') ? new Token(TokenType.EQUAL, "==", _line) : new Token(TokenType.ASSIGN, "=", _line);
-                case '+':
-                    return new Token(TokenType.PLUS, "+", _line);
-                case '-':
-                    return new Token(TokenType.MINUS, "-", _line);
+                case '+': return new Token(TokenType.PLUS, "+", _line);
+                case '-': return new Token(TokenType.MINUS, "-", _line);
                 case '*':
-                    // ** o *
-                    return Match('*') ? new Token(TokenType.POWER, "**", _line) : new Token(TokenType.MULTIPLY, "*", _line);
-                case '/':
-                    return new Token(TokenType.DIVIDE, "/", _line);
-                case '%':
-                    return new Token(TokenType.MOD, "%", _line);
-                case '>':
-                    // >= o >
-                    return Match('=') ? new Token(TokenType.GREATER_EQUAL, ">=", _line) : new Token(TokenType.GREATER, ">", _line);
+                    if (Match('*')) return new Token(TokenType.POWER, "**", _line);
+                    return new Token(TokenType.MULTIPLY, "*", _line);
+                case '/': return new Token(TokenType.DIVIDE, "/", _line);
+                case '%': return new Token(TokenType.MOD, "%", _line);
+                case '=':
+                    if (Match('=')) return new Token(TokenType.EQUAL, "==", _line);
+                    break;
                 case '<':
-                    // <=, <- o <
-                    return Match('=') ? new Token(TokenType.LESS_EQUAL, "<=", _line) : Match('-') ? new Token(TokenType.LESS_EQUAL, "<-", _line) : new Token(TokenType.LESS, "<", _line);
+                    if (Match('-')) return new Token(TokenType.ASSIGN, "<-", _line);
+                    if (Match('=')) return new Token(TokenType.LESS_EQUAL, "<=", _line);
+                    return new Token(TokenType.LESS, "<", _line);
+                case '>':
+                    if (Match('=')) return new Token(TokenType.GREATER_EQUAL, ">=", _line);
+                    return new Token(TokenType.GREATER, ">", _line);
                 case '&':
-                    // &&
                     if (Match('&')) return new Token(TokenType.AND, "&&", _line);
                     break;
                 case '|':
-                    // ||
                     if (Match('|')) return new Token(TokenType.OR, "||", _line);
                     break;
+
+                // ✅ Agrega estos para paréntesis, corchetes y comas:
+                case '(': return new Token(TokenType.LPAREN, "(", _line);
+                case ')': return new Token(TokenType.RPAREN, ")", _line);
+                case '[': return new Token(TokenType.LBRACKET, "[", _line);
+                case ']': return new Token(TokenType.RBRACKET, "]", _line);
+                case ',': return new Token(TokenType.COMMA, ",", _line);
             }
-            // Si no reconoce el símbolo, devuelve null
+
             return null;
         }
     }

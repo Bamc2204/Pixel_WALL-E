@@ -12,3 +12,4 @@ D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\refint\Back-end.dll
 D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.pdb
 D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.genruntimeconfig.cache
 D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\ref\Back-end.dll
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0\Back-end.sourcelink.json

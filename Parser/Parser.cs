@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Wall_E
 {
-    // Clase principal encargada de analizar una lista de tokens y convertirlos en comandos ejecutables
+    // Clase encargada de analizar una lista de tokens y convertirlos en comandos ejecutables
     public class Parser
     {
         // Lista de tokens generados por el lexer
@@ -43,20 +43,17 @@ namespace Wall_E
             return comandos;
         }
 
-        // ------- Método principal para reconocer un comando -------
-        // Analiza el token actual y decide qué tipo de comando es
+        // Reconoce el tipo de comando según el token actual
         private Comando? ParseComando()
         {
             Token token = Peek(); // Obtiene el token actual sin avanzar
 
             switch (token.Type)
             {
-                case TokenType.DRAW_LINE:
-                    // Si es un comando DrawLine, llama al método específico para analizarlo
-                    return ParseDrawLine();
-
-                // Aquí se pueden agregar otros comandos como SPAWN, COLOR, etc.
-
+                case TokenType.DRAW_LINE: return ParseDrawLine(); // Si es DrawLine, llama a su parser
+                case TokenType.SPAWN: return ParseSpawn();         // Si es Spawn, llama a su parser
+                case TokenType.COLOR: return ParseColor();         // Si es Color, llama a su parser
+                case TokenType.SIZE: return ParseSize();           // Si es Size, llama a su parser
                 default:
                     // Si el comando no es reconocido, muestra un mensaje de error
                     Console.WriteLine($"[Línea {token.Line}] Comando no reconocido: {token.Lexeme}");
@@ -64,40 +61,27 @@ namespace Wall_E
             }
         }
 
-        // ------- Método para analizar DrawLine(x, y, d) -------
-        // Analiza la sintaxis específica del comando DrawLine
+        // ---------------------
+        // Comando: DrawLine(x, y, d)
+        // ---------------------
         private Comando? ParseDrawLine()
         {
-            Token drawToken = Advance(); // Consume el token DRAW_LINE
-            int linea = drawToken.Line;  // Guarda el número de línea para mensajes de error
+            Token token = Advance(); // Consume el token DRAW_LINE
+            int linea = token.Line;  // Guarda el número de línea para mensajes de error
 
-            // Verifica que el siguiente token sea un paréntesis de apertura '('
-            if (!Match(TokenType.LPAREN))
-                return Error("Falta '(' después de DrawLine");
+            if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de DrawLine");
 
-            // Primer parámetro: dirX (debe ser un número)
-            int? dirX = ParseNumero();
+            int? dirX = ParseNumero(); // Primer parámetro: dirección X
             if (dirX == null) return null;
+            if (!Match(TokenType.COMMA)) return Error("Falta ',' después de primer número");
 
-            // Verifica que haya una coma después del primer número
-            if (!Match(TokenType.COMMA))
-                return Error("Falta ',' después de primer número");
-
-            // Segundo parámetro: dirY (debe ser un número)
-            int? dirY = ParseNumero();
+            int? dirY = ParseNumero(); // Segundo parámetro: dirección Y
             if (dirY == null) return null;
+            if (!Match(TokenType.COMMA)) return Error("Falta ',' después de segundo número");
 
-            // Verifica que haya una coma después del segundo número
-            if (!Match(TokenType.COMMA))
-                return Error("Falta ',' después de segundo número");
-
-            // Tercer parámetro: distancia (debe ser un número)
-            int? dist = ParseNumero();
+            int? dist = ParseNumero(); // Tercer parámetro: distancia
             if (dist == null) return null;
-
-            // Verifica que el comando termine con un paréntesis de cierre ')'
-            if (!Match(TokenType.RPAREN))
-                return Error("Falta ')' al final de DrawLine");
+            if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de DrawLine");
 
             // Si todo fue bien, crea y devuelve el comando DrawLineCommand
             return new DrawLineCommand
@@ -109,17 +93,96 @@ namespace Wall_E
             };
         }
 
-        // ------- Métodos auxiliares -------
+        // ---------------------
+        // Comando: Spawn(x, y)
+        // ---------------------
+        private Comando? ParseSpawn()
+        {
+            Token token = Advance(); // Consume el token SPAWN
+            int linea = token.Line;
+
+            if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Spawn");
+
+            int? x = ParseNumero(); // Primer parámetro: X
+            if (x == null) return null;
+            if (!Match(TokenType.COMMA)) return Error("Falta ',' después de primer número");
+
+            int? y = ParseNumero(); // Segundo parámetro: Y
+            if (y == null) return null;
+            if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de Spawn");
+
+            // Si todo fue bien, crea y devuelve el comando SpawnCommand
+            return new SpawnCommand
+            {
+                X = x.Value,
+                Y = y.Value,
+                Linea = linea
+            };
+        }
+
+        // ---------------------
+        // Comando: Color("nombre")
+        // ---------------------
+        private Comando? ParseColor()
+        {
+            Token token = Advance(); // Consume el token COLOR
+            int linea = token.Line;
+
+            if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Color");
+
+            // Espera un string como parámetro
+            if (!Match(TokenType.STRING))
+            {
+                Console.WriteLine($"[Línea {Peek().Line}] Se esperaba un string con el nombre del color");
+                return null;
+            }
+
+            string color = Previous().Lexeme; // Obtiene el nombre del color
+
+            if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de Color");
+
+            // Si todo fue bien, crea y devuelve el comando ColorCommand
+            return new ColorCommand
+            {
+                NombreColor = color,
+                Linea = linea
+            };
+        }
+
+        // ---------------------
+        // Comando: Size(n)
+        // ---------------------
+        private Comando? ParseSize()
+        {
+            Token token = Advance(); // Consume el token SIZE
+            int linea = token.Line;
+
+            if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Size");
+
+            int? valor = ParseNumero(); // Espera un número como parámetro
+            if (valor == null) return null;
+
+            if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de Size");
+
+            // Si todo fue bien, crea y devuelve el comando SizeCommand
+            return new SizeCommand
+            {
+                Valor = valor.Value,
+                Linea = linea
+            };
+        }
+
+        // ---------------------
+        // Utilidades
+        // ---------------------
 
         // Intenta analizar un número, si el token actual es un número lo consume y lo devuelve
         private int? ParseNumero()
         {
             if (Match(TokenType.NUMBER))
             {
-                Token num = Previous();
-                return int.Parse(num.Lexeme);
+                return int.Parse(Previous().Lexeme);
             }
-            // Si no es un número, muestra un mensaje de error
             Console.WriteLine($"[Línea {Peek().Line}] Se esperaba un número");
             return null;
         }
@@ -154,6 +217,7 @@ namespace Wall_E
 
         // Devuelve el token actual sin avanzar
         private Token Peek() => _tokens[_current];
+
         // Devuelve el token anterior al actual
         private Token Previous() => _tokens[_current - 1];
 
