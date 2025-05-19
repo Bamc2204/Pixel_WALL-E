@@ -5,7 +5,8 @@ namespace Wall_E
     // Enumeración que define todos los tipos de tokens que puede reconocer el lexer
     public enum TokenType
     {
-        // Palabras clave: comandos principales que puede escribir el usuario
+        #region "Palabras clave: comandos principales"
+
         SPAWN,          // Comando para crear un objeto o entidad
         COLOR,          // Comando para cambiar el color
         SIZE,           // Comando para cambiar el tamaño
@@ -14,7 +15,10 @@ namespace Wall_E
         DRAW_RECTANGLE, // Comando para dibujar un rectángulo
         FILL,           // Comando para rellenar una figura
 
-        // Funciones: operaciones que devuelven información sobre el estado del canvas o pincel
+        #endregion
+
+        #region "Funciones: operaciones sobre el canvas o pincel"
+
         GET_ACTUAL_X,       // Obtener la posición X actual
         GET_ACTUAL_Y,       // Obtener la posición Y actual
         GET_CANVAS_SIZE,    // Obtener el tamaño del canvas
@@ -23,7 +27,10 @@ namespace Wall_E
         IS_BRUSH_SIZE,      // Verificar si el tamaño del pincel es un tamaño específico
         IS_CANVAS_COLOR,    // Verificar si el color del canvas es un color específico
 
-        // Operadores: símbolos para operaciones matemáticas y de asignación
+        #endregion
+
+        #region "Operadores matemáticos y de asignación"
+
         ASSIGN,         // <-  Operador de asignación
         PLUS,           // +   Suma
         MINUS,          // -   Resta
@@ -32,28 +39,43 @@ namespace Wall_E
         POWER,          // **  Potencia
         MOD,            // %   Módulo
 
-        // Comparaciones: operadores para comparar valores
+        #endregion
+
+        #region "Operadores de comparación"
+
         EQUAL,          // ==  Igualdad
         GREATER_EQUAL,  // >=  Mayor o igual
         LESS_EQUAL,     // <=  Menor o igual
         GREATER,        // >   Mayor que
         LESS,           // <   Menor que
 
-        // Booleanos: operadores lógicos
+        #endregion
+
+        #region "Operadores booleanos"
+
         AND,            // &&  Y lógico
         OR,             // ||  O lógico
 
-        // Estructuras de control: para saltos y etiquetas
+        #endregion
+
+        #region "Estructuras de control"
+
         GOTO,           // Salto a una etiqueta
         LABEL_DEF,      // Definición de una etiqueta
 
-        // Literales y tipos: valores y nombres identificadores
+        #endregion
+
+        #region "Literales y tipos"
+
         NUMBER,         // Número (entero o decimal)
         STRING,         // Cadena de texto
         BOOLEAN,        // Valor booleano (true/false)
         IDENTIFIER,     // Identificador (nombre de variable, función, etc.)
 
-        // Símbolos: signos de puntuación y agrupación
+        #endregion
+
+        #region "Símbolos de agrupación y puntuación"
+
         LPAREN,         // (   Paréntesis de apertura
         RPAREN,         // )   Paréntesis de cierre
         LBRACKET,       // [   Corchete de apertura
@@ -61,8 +83,13 @@ namespace Wall_E
         COMMA,          // ,   Coma
         NEWLINE,        //     Salto de línea
 
-        // Final y errores
+        #endregion
+
+        #region "Final y errores"
+
         EOF,            // Fin de archivo/código
         UNKNOWN         // Token no reconocido (error léxico)
+
+        #endregion
     }
 }

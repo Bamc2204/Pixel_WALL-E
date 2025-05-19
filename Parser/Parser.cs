@@ -6,6 +6,8 @@ namespace Wall_E
     // Clase encargada de analizar una lista de tokens y convertirlos en comandos ejecutables
     public class Parser
     {
+        #region "Campos y Constructor"
+
         // Lista de tokens generados por el lexer
         private readonly List<Token> _tokens;
         // Índice del token actual que se está procesando
@@ -16,6 +18,10 @@ namespace Wall_E
         {
             _tokens = tokens;
         }
+
+        #endregion
+
+        #region "Método principal de análisis"
 
         // Método principal: recorre todos los tokens y construye una lista de comandos válidos
         public List<Comando> Parse()
@@ -43,6 +49,10 @@ namespace Wall_E
             return comandos;
         }
 
+        #endregion
+
+        #region "Reconocimiento de comandos"
+
         // Reconoce el tipo de comando según el token actual
         private Comando? ParseComando()
         {
@@ -60,6 +70,10 @@ namespace Wall_E
                     return null;
             }
         }
+
+        #endregion
+
+        #region "Parsers específicos para cada comando"
 
         // ---------------------
         // Comando: DrawLine(x, y, d)
@@ -172,9 +186,9 @@ namespace Wall_E
             };
         }
 
-        // ---------------------
-        // Utilidades
-        // ---------------------
+        #endregion
+
+        #region "Utilidades y métodos auxiliares"
 
         // Intenta analizar un número, si el token actual es un número lo consume y lo devuelve
         private int? ParseNumero()
@@ -227,5 +241,7 @@ namespace Wall_E
             Console.WriteLine($"[Línea {Peek().Line}] Error de sintaxis: {mensaje}");
             return null;
         }
+
+        #endregion
     }
 }

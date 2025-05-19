@@ -9,6 +9,8 @@ namespace Wall_E
     // Clase encargada de analizar el texto fuente y convertirlo en una lista de tokens
     public class Lexer
     {
+        #region "Campos y Constructor"
+
         // Código fuente a analizar
         private readonly string _source;
         // Índice del carácter actual en el código fuente
@@ -24,6 +26,10 @@ namespace Wall_E
             _source = source;
         }
 
+        #endregion
+
+        #region "Tokenización principal"
+
         // Método principal: recorre el código fuente y genera la lista de tokens
         public List<Token> Tokenize()
         {
@@ -31,22 +37,26 @@ namespace Wall_E
 
             while (!IsAtEnd())
             {
+                // Si el carácter actual es un espacio en blanco
                 if (char.IsWhiteSpace(Peek()))
                 {
+                    // Si es salto de línea, aumenta el contador de línea y agrega un token NEWLINE
                     if (Peek() == '\n')
                     {
                         _line++;
                         _newLineJustPassed = true;
                         tokens.Add(new Token(TokenType.NEWLINE, "\\n", _line));
                     }
-                    Advance();
+                    Advance(); // Avanza al siguiente carácter
                     continue;
                 }
 
+                // Si el carácter es una letra o un guion, puede ser palabra clave, identificador o etiqueta
                 if (char.IsLetter(Peek()) || Peek() == '-')
                 {
                     string word = ReadWhile(ch => char.IsLetterOrDigit(ch) || ch == '-');
 
+                    // Si está al inicio de una línea, lo trata como etiqueta
                     if (_newLineJustPassed && (IsAtEnd() || Peek() == '\n'))
                     {
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
@@ -54,6 +64,7 @@ namespace Wall_E
                     }
                     else
                     {
+                        // Si no es etiqueta, verifica si es palabra clave o identificador
                         tokens.Add(KeywordOrIdentifier(word));
                         _newLineJustPassed = false;
                     }
@@ -61,6 +72,7 @@ namespace Wall_E
                     continue;
                 }
 
+                // Si el carácter es un dígito, lee un número
                 if (char.IsDigit(Peek()))
                 {
                     string number = ReadWhile(char.IsDigit);
@@ -69,6 +81,7 @@ namespace Wall_E
                     continue;
                 }
 
+                // Si el carácter es una comilla, lee una cadena de texto
                 if (Peek() == '"')
                 {
                     Advance(); // consumir la primera comilla
@@ -78,6 +91,7 @@ namespace Wall_E
                     continue;
                 }
 
+                // Si es cualquier otro carácter, intenta reconocerlo como símbolo u operador
                 char c = Advance();
                 Token token = RecognizeSymbolOrOperator(c);
                 if (token != null)
@@ -87,16 +101,19 @@ namespace Wall_E
                 }
                 else
                 {
+                    // Si no reconoce el símbolo, lo marca como desconocido
                     tokens.Add(new Token(TokenType.UNKNOWN, c.ToString(), _line));
                 }
             }
 
+            // Al final, agrega un token de fin de archivo
             tokens.Add(new Token(TokenType.EOF, "", _line));
             return tokens;
         }
 
+        #endregion
 
-        // --------- Métodos auxiliares para el análisis léxico ---------
+        #region "Métodos auxiliares de navegación"
 
         // Verifica si se llegó al final del código fuente
         private bool IsAtEnd() => _current >= _source.Length;
@@ -117,6 +134,10 @@ namespace Wall_E
             _current++;
             return true;
         }
+
+        #endregion
+
+        #region "Lectura de palabras, números y cadenas"
 
         // Lee caracteres mientras se cumpla la condición dada
         private string ReadWhile(Func<char, bool> condition)
@@ -140,6 +161,11 @@ namespace Wall_E
             return sb.ToString();
         }
 
+        #endregion
+
+        #region "Palabras clave y identificadores"
+
+        // Diccionario que asocia palabras clave con su tipo de token
         private static readonly Dictionary<string, TokenType> PalabrasClave = new()
         {
             { "Spawn", TokenType.SPAWN },
@@ -160,18 +186,20 @@ namespace Wall_E
             { "IsCanvasColor", TokenType.IS_CANVAS_COLOR },
         };
 
+        // Determina si una palabra es palabra clave o identificador
         private Token KeywordOrIdentifier(string word)
         {
             if (PalabrasClave.TryGetValue(word, out var type))
             {
                 return new Token(type, word, _line);
             }
-
+            // Si no es palabra clave, es un identificador
             return new Token(TokenType.IDENTIFIER, word, _line);
         }
 
+        #endregion
 
-
+        #region "Reconocimiento de operadores y símbolos"
 
         // Reconoce operadores y símbolos individuales o compuestos
         private Token RecognizeSymbolOrOperator(char c)
@@ -201,8 +229,7 @@ namespace Wall_E
                 case '|':
                     if (Match('|')) return new Token(TokenType.OR, "||", _line);
                     break;
-
-                // ✅ Agrega estos para paréntesis, corchetes y comas:
+                // Paréntesis, corchetes y coma
                 case '(': return new Token(TokenType.LPAREN, "(", _line);
                 case ')': return new Token(TokenType.RPAREN, ")", _line);
                 case '[': return new Token(TokenType.LBRACKET, "[", _line);
@@ -210,7 +237,10 @@ namespace Wall_E
                 case ',': return new Token(TokenType.COMMA, ",", _line);
             }
 
+            // Si no reconoce el símbolo, devuelve null
             return null;
         }
+
+        #endregion
     }
 }
