@@ -52,22 +52,22 @@ namespace Wall_E
                 }
 
                 // Si el carácter es una letra o un guion, puede ser palabra clave, identificador o etiqueta
-                if (char.IsLetter(Peek()) || Peek() == '-')
+                if (char.IsLetter(Peek()) || Peek() == '_')
                 {
-                    string word = ReadWhile(ch => char.IsLetterOrDigit(ch) || ch == '-');
+                    string word = ReadWhile(ch => char.IsLetterOrDigit(ch) || ch == '_');
 
                     // Si está al inicio de una línea, lo trata como etiqueta
-                    if (_newLineJustPassed && (IsAtEnd() || Peek() == '\n'))
+                    if (_newLineJustPassed)
                     {
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
-                        _newLineJustPassed = false;
                     }
                     else
                     {
-                        // Si no es etiqueta, verifica si es palabra clave o identificador
                         tokens.Add(KeywordOrIdentifier(word));
-                        _newLineJustPassed = false;
                     }
+
+                    // Siempre se reinicia el indicador de línea nueva
+                    _newLineJustPassed = false;
 
                     continue;
                 }

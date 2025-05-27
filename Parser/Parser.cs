@@ -31,17 +31,20 @@ namespace Wall_E
             // Mientras no se llegue al final de los tokens
             while (!IsAtEnd())
             {
-                // Intenta analizar un comando
+                if (Peek().Type == TokenType.NEWLINE)
+                {
+                    Advance(); // Ignora líneas vacías
+                    continue;
+                }
+
                 Comando cmd = ParseComando();
                 if (cmd != null)
                 {
-                    // Si el comando es válido, lo agrega a la lista
                     comandos.Add(cmd);
                 }
                 else
                 {
-                    // Si no es válido, avanza al siguiente token para evitar bucles infinitos
-                    Advance();
+                    Advance(); // Evita bucle infinito
                 }
             }
 
@@ -64,11 +67,69 @@ namespace Wall_E
                 case TokenType.SPAWN: return ParseSpawn();         // Si es Spawn, llama a su parser
                 case TokenType.COLOR: return ParseColor();         // Si es Color, llama a su parser
                 case TokenType.SIZE: return ParseSize();           // Si es Size, llama a su parser
+                case TokenType.LABEL_DEF: return ParseEtiqueta();
+                case TokenType.GOTO: return ParseGoto();
                 default:
                     // Si el comando no es reconocido, muestra un mensaje de error
                     Console.WriteLine($"[Línea {token.Line}] Comando no reconocido: {token.Lexeme}");
                     return null;
             }
+        }
+
+        #endregion
+
+        #region ParseEtiqueta
+
+        private Comando? ParseEtiqueta()
+        {
+            Token token = Advance();
+            return new LabelCommand
+            {
+                Nombre = token.Lexeme,
+                Linea = token.Line
+            };
+        }
+
+        #endregion
+
+        #region ParseGoto
+
+        private Comando? ParseGoto()
+        {
+            Token gotoToken = Advance(); // consume GOTO
+            int linea = gotoToken.Line;
+
+            if (!Match(TokenType.LBRACKET))
+                return Error("Falta '[' después de Goto");
+
+            if (!Match(TokenType.IDENTIFIER) && !Match(TokenType.LABEL_DEF))
+                return Error("Se esperaba el nombre de la etiqueta entre corchetes");
+
+            string nombreEtiqueta = Previous().Lexeme;
+
+            if (!Match(TokenType.RBRACKET))
+                return Error("Falta ']' después del nombre de la etiqueta");
+
+            if (!Match(TokenType.LPAREN))
+                return Error("Falta '(' con la condición del Goto");
+
+            // Leer condición como texto crudo (hasta cerrar el paréntesis)
+            string condicion = "";
+
+            while (!IsAtEnd() && !Check(TokenType.RPAREN))
+            {
+                condicion += Advance().Lexeme + " ";
+            }
+
+            if (!Match(TokenType.RPAREN))
+                return Error("Falta ')' al final de la condición del Goto");
+
+            return new GotoCommand
+            {
+                EtiquetaDestino = nombreEtiqueta,
+                CondicionTexto = condicion.Trim(),
+                Linea = linea
+            };
         }
 
         #endregion

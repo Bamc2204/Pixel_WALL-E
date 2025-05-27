@@ -6,10 +6,9 @@ class Program
 {
     static void Main()
     {
-        string codigo = @"Spawn(0, 0)
-        Color(""Blue"")
-        Size(3)
-        DrawLine(1, 0, 5)";
+        string codigo = @"loop_1
+        Goto [loop_1] (i < 10)";
+
 
         // Paso 1: Analizar código → tokens
         AnalizadorDeCodigo analizador = new AnalizadorDeCodigo(codigo);
