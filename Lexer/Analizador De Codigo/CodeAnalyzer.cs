@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Wall_E
 {
-    #region "Analizador de Código Fuente"
+    #region CodeAnalyzer
 
     /// <summary>
     /// Clase encargada de analizar el código fuente, obtener los tokens y mostrar resultados.
@@ -11,51 +11,51 @@ namespace Wall_E
     /// </summary>
     public class CodeAnalyzer
     {
-        #region "Campos privados"
+        #region PrivateFields
 
         // Variable privada que almacena el código fuente a analizar
-        private readonly string _codigo;
+        private readonly string _sourceCode;
 
         #endregion
 
-        #region "Constructor"
+        #region Constructor
 
         /// <summary>
         /// El código fuente se pasa como argumento al constructor.
         /// </summary>
-        /// <param name="codigo">Código fuente a analizar.</param>
-        public CodeAnalyzer(string codigo)
+        /// <param name="sourceCode">Código fuente a analizar.</param>
+        public CodeAnalyzer(string sourceCode)
         {
-            _codigo = codigo;
+            _sourceCode = sourceCode;
         }
 
         #endregion
 
-        #region "Obtención de Tokens"
+        #region TokenRetrieval
 
         /// <summary>
         /// Método que utiliza el Lexer para obtener la lista de tokens del código fuente.
         /// </summary>
         /// <returns>Lista de tokens generados por el lexer.</returns>
-        public List<Token> ObtenerTokens()
+        public List<Token> GetTokens()
         {
             // Crea una instancia del Lexer con el código fuente
-            Lexer lexer = new Lexer(_codigo);
+            Lexer lexer = new Lexer(_sourceCode);
             // Llama al método Tokenize para obtener la lista de tokens
             return lexer.Tokenize();
         }
 
         #endregion
 
-        #region "Ejecución y Visualización"
+        #region ExecutionAndVisualization
 
         /// <summary>
         /// Método que ejecuta el análisis y muestra los tokens generados por consola.
         /// </summary>
-        public void EjecutarCodigo()
+        public void RunCode()
         {
             // Obtiene la lista de tokens usando el método anterior
-            List<Token> tokens = ObtenerTokens();
+            List<Token> tokens = GetTokens();
 
             // Muestra un encabezado en la consola
             Console.WriteLine("=== Tokens generados ===");
@@ -67,9 +67,9 @@ namespace Wall_E
 
             // Comentario: aquí se puede conectar con el parser y el ejecutor en el futuro
             // Parser parser = new Parser(tokens);
-            // var comandos = parser.Parse();
-            // Executor executor = new Executor(comandos);
-            // executor.Ejecutar();
+            // var commands = parser.Parse();
+            // Executor executor = new Executor(commands);
+            // executor.Execute();
         }
 
         #endregion

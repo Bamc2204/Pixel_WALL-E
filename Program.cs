@@ -8,14 +8,17 @@ class Program
     {
         Console.Clear();
         // Código de prueba con asignaciones y funciones
-        string codigo = @"x <- 5
-        y <- x
-        z <- x + 3
-        is_blue <- IsBrushColor(""Blue"")";
+        string codigo = @"i <- 0
+        loop_1
+        Goto [end] (i >= 3)
+        i <- i + 1
+        Goto [loop_1] (1 == 1)
+        end
+        ";
 
         // Analiza el código fuente
         CodeAnalyzer analizador = new CodeAnalyzer(codigo);
-        List<Token> tokens = analizador.ObtenerTokens();
+        List<Token> tokens = analizador.GetTokens();
 
         // Muestra tokens para depuración
         Console.WriteLine("=== TOKENS ===");
@@ -29,5 +32,11 @@ class Program
         Console.WriteLine("\n=== CÓDIGOS PARSEADOS ===");
         foreach (var c in codigos)
             Console.WriteLine(c);
+
+        // Ejecutar
+        Console.WriteLine("\n=== EJECUCIÓN ===");
+        Executor executor = new Executor();
+        executor.Execute(codigos);
+        
     }
 }

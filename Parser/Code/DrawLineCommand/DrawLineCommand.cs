@@ -1,6 +1,6 @@
 namespace Wall_E
 {
-    #region "Comando DrawLine"
+    #region DrawLineCommand
 
     /// <summary>
     /// Clase que representa el comando DrawLine, utilizada para almacenar los parámetros del comando y su línea.
@@ -8,7 +8,7 @@ namespace Wall_E
     /// </summary>
     public class DrawLineCommand : Code
     {
-        #region "Propiedades"
+        #region Properties
 
         /// <summary>
         /// Dirección X de la línea a dibujar.
@@ -27,14 +27,14 @@ namespace Wall_E
 
         #endregion
 
-        #region "Métodos de Representación"
+        #region RepresentationMethods
 
         /// <summary>
         /// Devuelve una representación en texto del comando DrawLine, mostrando sus parámetros y la línea.
         /// </summary>
         public override string ToString()
         {
-            return $"DrawLine({DirX}, {DirY}, {Distance}) [línea {Linea}]";
+            return $"DrawLine({DirX}, {DirY}, {Distance}) [línea {Line}]";
         }
 
         #endregion

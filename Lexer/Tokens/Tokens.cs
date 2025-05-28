@@ -3,7 +3,7 @@ using Wall_E; // Importa el enum TokenType
 
 namespace Wall_E
 {
-    #region "Clase Token"
+    #region TokenClass
 
     /// <summary>
     /// Clase que representa un token individual generado por el lexer.
@@ -11,7 +11,7 @@ namespace Wall_E
     /// </summary>
     public class Token
     {
-        #region "Propiedades"
+        #region Properties
 
         /// <summary>
         /// Tipo de token (por ejemplo, palabra clave, número, símbolo, etc.).
@@ -30,7 +30,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Constructor"
+        #region Constructor
 
         /// <summary>
         /// Inicializa el token con su tipo, texto y línea.
@@ -44,7 +44,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Métodos de Representación"
+        #region RepresentationMethods
 
         /// <summary>
         /// Devuelve una representación legible del token, útil para depuración.

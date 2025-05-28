@@ -2,38 +2,34 @@ using System;
 
 namespace Wall_E
 {
-    #region "Comando Goto"
+    #region GotoCommand
 
     /// <summary>
-    /// Representa un salto condicional a una etiqueta.
-    /// Permite cambiar el flujo del programa según una condición.
-    /// Ejemplo: Goto [etiqueta] (condición)
+    /// Representa un comando de salto condicional (Goto) en el código.
+    /// Permite saltar a una etiqueta específica si se cumple una condición.
     /// </summary>
     public class GotoCommand : Code
     {
-        #region "Propiedades"
+        #region Properties
 
         /// <summary>
-        /// Nombre de la etiqueta de destino a la que se realiza el salto.
+        /// Nombre de la etiqueta de destino a la que se realizará el salto.
         /// </summary>
-        public string EtiquetaDestino { get; set; }
+        public string TargetLabel { get; set; } = "";
 
         /// <summary>
-        /// Condición en texto que debe cumplirse para realizar el salto.
+        /// Texto de la condición que debe cumplirse para ejecutar el salto.
         /// </summary>
-        public string CondicionTexto { get; set; }
+        public string ConditionText { get; set; } = "";
 
         #endregion
 
-        #region "Métodos de Representación"
+        #region RepresentationMethods
 
         /// <summary>
-        /// Devuelve una representación en texto del comando Goto.
+        /// Devuelve una representación en texto del comando Goto, mostrando la etiqueta de destino, la condición y la línea.
         /// </summary>
-        public override string ToString()
-        {
-            return $"Goto [{EtiquetaDestino}] ({CondicionTexto}) [línea {Linea}]";
-        }
+        public override string ToString() => $"Goto [{TargetLabel}] ({ConditionText}) [line {Line}]";
 
         #endregion
     }

@@ -2,7 +2,7 @@ using System;
 
 namespace Wall_E
 {
-    #region "Enumeración de Tipos de Tokens"
+    #region TokenTypeEnum
 
     /// <summary>
     /// Enumeración que define todos los tipos de tokens que puede reconocer el lexer.
@@ -10,7 +10,7 @@ namespace Wall_E
     /// </summary>
     public enum TokenType
     {
-        #region "Palabras clave: comandos principales"
+        #region MainCommands
 
         SPAWN,          // Comando para crear un objeto o entidad
         COLOR,          // Comando para cambiar el color
@@ -22,7 +22,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Funciones: operaciones sobre el canvas o pincel"
+        #region CanvasAndBrushFunctions
 
         GET_ACTUAL_X,       // Obtener la posición X actual
         GET_ACTUAL_Y,       // Obtener la posición Y actual
@@ -34,7 +34,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Operadores matemáticos y de asignación"
+        #region MathAndAssignmentOperators
 
         ASSIGN,         // <-  Operador de asignación
         PLUS,           // +   Suma
@@ -46,7 +46,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Operadores de comparación"
+        #region ComparisonOperators
 
         EQUAL,          // ==  Igualdad
         GREATER_EQUAL,  // >=  Mayor o igual
@@ -56,21 +56,21 @@ namespace Wall_E
 
         #endregion
 
-        #region "Operadores booleanos"
+        #region BooleanOperators
 
         AND,            // &&  Y lógico
         OR,             // ||  O lógico
 
         #endregion
 
-        #region "Estructuras de control"
+        #region ControlStructures
 
         GOTO,           // Salto a una etiqueta
         LABEL_DEF,      // Definición de una etiqueta
 
         #endregion
 
-        #region "Literales y tipos"
+        #region LiteralsAndTypes
 
         NUMBER,         // Número (entero o decimal)
         STRING,         // Cadena de texto
@@ -79,7 +79,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Símbolos de agrupación y puntuación"
+        #region GroupingAndPunctuation
 
         LPAREN,         // (   Paréntesis de apertura
         RPAREN,         // )   Paréntesis de cierre
@@ -90,7 +90,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Final y errores"
+        #region EndAndError
 
         EOF,            // Fin de archivo/código
         UNKNOWN         // Token no reconocido (error léxico)

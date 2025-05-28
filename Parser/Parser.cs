@@ -4,13 +4,14 @@ using Wall_E;
 
 namespace Wall_E
 {
+    #region Parser Class 
     /// <summary>
     /// Clase encargada de analizar una lista de tokens y convertirlos en comandos ejecutables.
     /// </summary>
     public class Parser
     {
-        #region "Campos y Constructor"
-        
+        #region FieldsAndConstructor
+
         // Lista de tokens generados por el lexer
         private readonly List<Token> _tokens;
         // Índice del token actual que se está procesando
@@ -27,7 +28,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Método principal de análisis"
+        #region MainParseMethod
 
         /// <summary>
         /// Método principal: recorre todos los tokens y construye una lista de comandos válidos.
@@ -48,7 +49,7 @@ namespace Wall_E
                 }
 
                 // Intenta analizar un comando
-                Code cmd = ParserCode();
+                Code cmd = ParseCode();
                 if (cmd != null)
                 {
                     codes.Add(cmd); // Agrega el comando reconocido a la lista
@@ -65,13 +66,13 @@ namespace Wall_E
 
         #endregion
 
-        #region "Reconocimiento de comandos"
+        #region CommandRecognition
 
         /// <summary>
         /// Reconoce el tipo de comando según el token actual.
         /// </summary>
         /// <returns>Comando reconocido o null si no se reconoce.</returns>
-        private Code? ParserCode()
+        private Code? ParseCode()
         {
             Token token = Peek(); // Obtiene el token actual sin avanzar
 
@@ -81,131 +82,136 @@ namespace Wall_E
                 case TokenType.SPAWN: return ParseSpawn();         // Si es Spawn, llama a su parser
                 case TokenType.COLOR: return ParseColor();         // Si es Color, llama a su parser
                 case TokenType.SIZE: return ParseSize();           // Si es Size, llama a su parser
-                case TokenType.LABEL_DEF: return ParseEtiqueta();  // Si es una etiqueta, llama a su parser
+                case TokenType.LABEL_DEF: return ParseLabel();     // Si es una etiqueta, llama a su parser
                 case TokenType.GOTO: return ParseGoto();           // Si es Goto, llama a su parser
-                case TokenType.IDENTIFIER: return CheckNext(TokenType.ASSIGN) ? ParseAsignacion() : null; // Asignación
+                case TokenType.IDENTIFIER: return CheckNext(TokenType.ASSIGN) ? ParseAssignment() : null; // Asignación
                 default:
                     // Si el comando no es reconocido, muestra un mensaje de error
-                    Console.WriteLine($"[Línea {token.Line}] Comando no reconocido: {token.Lexeme}");
+                    Console.WriteLine($"[Line {token.Line}] Unrecognized command: {token.Lexeme}");
                     return null;
             }
         }
 
         #endregion
 
-        #region "ParseEtiqueta"
+        #region ParseLabel
 
         /// <summary>
         /// Analiza una etiqueta (LABEL_DEF).
         /// </summary>
-        private Code? ParseEtiqueta()
+        private Code? ParseLabel()
         {
             Token token = Advance();
             return new LabelCommand
             {
-                Nombre = token.Lexeme,
-                Linea = token.Line
+                Name = token.Lexeme,
+                Line = token.Line
             };
         }
 
         #endregion
 
-        #region "ParseGoto"
+        #region ParseGoto
 
         /// <summary>
-        /// Analiza un comando Goto.
+        /// Analiza el comando Goto con condición.
         /// </summary>
         private Code? ParseGoto()
         {
-            Token gotoToken = Advance(); // consume GOTO
-            int linea = gotoToken.Line;
+            Token token = Advance(); // consume 'Goto'
+            int line = token.Line;
 
             if (!Match(TokenType.LBRACKET))
-                return Error("Falta '[' después de Goto");
+                return Error("Falta '[' después de 'Goto'");
 
-            if (!Match(TokenType.IDENTIFIER) && !Match(TokenType.LABEL_DEF))
-                return Error("Se esperaba el nombre de la etiqueta entre corchetes");
+            if (!Match(TokenType.IDENTIFIER))
+                return Error("Se esperaba el nombre de la etiqueta dentro de [ ]");
 
-            string nombreEtiqueta = Previous().Lexeme;
+            string label = Previous().Lexeme;
 
             if (!Match(TokenType.RBRACKET))
                 return Error("Falta ']' después del nombre de la etiqueta");
 
             if (!Match(TokenType.LPAREN))
-                return Error("Falta '(' con la condición del Goto");
+                return Error("Falta '(' para la condición del Goto");
 
-            // Leer condición como texto crudo (hasta cerrar el paréntesis)
-            string condicion = "";
+            // Captura condicional como string crudo (hasta cerrar el paréntesis)
+            string condition = "";
+            int depth = 1;
 
-            while (!IsAtEnd() && !Check(TokenType.RPAREN))
+            while (!IsAtEnd() && depth > 0)
             {
-                condicion += Advance().Lexeme + " ";
+                Token t = Advance();
+                if (t.Type == TokenType.LPAREN) depth++;
+                if (t.Type == TokenType.RPAREN) depth--;
+
+                if (depth > 0)
+                    condition += t.Lexeme + " ";
             }
 
-            if (!Match(TokenType.RPAREN))
-                return Error("Falta ')' al final de la condición del Goto");
+            condition = condition.Trim();
 
             return new GotoCommand
             {
-                EtiquetaDestino = nombreEtiqueta,
-                CondicionTexto = condicion.Trim(),
-                Linea = linea
+                TargetLabel = label,
+                ConditionText = condition,
+                Line = line
             };
         }
 
         #endregion
 
-        #region "ParseAsignacion"
+        #region ParseAssignment
 
         /// <summary>
         /// Analiza una asignación de variable (IDENTIFIER <- expresión).
         /// </summary>
-        private Code? ParseAsignacion()
+        private Code? ParseAssignment()
         {
             Token id = Advance();
             string variable = id.Lexeme;
-            int linea = id.Line;
+            int line = id.Line;
 
             if (!Match(TokenType.ASSIGN))
                 return Error("Falta '<-' después del nombre de la variable");
 
-            Expr expr = ParseExpresion();
+            Expr expr = ParseExpression();
             return new AssignmentCommand
             {
                 VariableName = variable,
                 Expression = expr,
-                Linea = linea
+                Line = line
             };
         }
 
         #endregion
 
-        #region "ParseExpresion (con operadores)"
+        #region ParseExpressionWithOperators
 
         /// <summary>
         /// Analiza una expresión completa (soporta suma, resta, multiplicación, división, potencias, etc.).
         /// </summary>
-        private Expr ParseExpresion()
+        private Expr ParseExpression()
         {
-            return ParseSumaResta();
+            return ParseAddSubtract();
         }
 
         /// <summary>
         /// Analiza sumas y restas (precedencia menor).
         /// </summary>
-        private Expr ParseSumaResta()
+        private Expr ParseAddSubtract()
         {
-            Expr expr = ParseMultiplicacion();
+            Expr expr = ParseMultiply();
 
             while (Match(TokenType.PLUS) || Match(TokenType.MINUS))
             {
-                string operador = Previous().Lexeme;
-                Expr derecho = ParseMultiplicacion();
+                string op = Previous().Lexeme;
+                Expr right = ParseMultiply();
                 expr = new BinaryExpr
                 {
-                    Operator = operador,
+                    Operator = op,
                     Left = expr,
-                    Right = derecho
+                    Right = right
                 };
             }
 
@@ -215,19 +221,19 @@ namespace Wall_E
         /// <summary>
         /// Analiza multiplicaciones, divisiones, módulo y potencias (precedencia mayor).
         /// </summary>
-        private Expr ParseMultiplicacion()
+        private Expr ParseMultiply()
         {
-            Expr expr = ParsePrimaria();
+            Expr expr = ParsePrimary();
 
             while (Match(TokenType.MULTIPLY) || Match(TokenType.DIVIDE) || Match(TokenType.MOD) || Match(TokenType.POWER))
             {
-                string operador = Previous().Lexeme;
-                Expr derecho = ParsePrimaria();
+                string op = Previous().Lexeme;
+                Expr right = ParsePrimary();
                 expr = new BinaryExpr
                 {
-                    Operator = operador,
+                    Operator = op,
                     Left = expr,
-                    Right = derecho
+                    Right = right
                 };
             }
 
@@ -237,7 +243,7 @@ namespace Wall_E
         /// <summary>
         /// Analiza valores primarios: números, strings, variables, llamadas a funciones.
         /// </summary>
-        private Expr ParsePrimaria()
+        private Expr ParsePrimary()
         {
             if (Match(TokenType.NUMBER))
                 return new LiteralExpr { Value = Previous().Lexeme };
@@ -250,7 +256,7 @@ namespace Wall_E
                 || Match(TokenType.GET_ACTUAL_Y) || Match(TokenType.GET_CANVAS_SIZE) || Match(TokenType.GET_COLOR_COUNT)
                 || Match(TokenType.IS_BRUSH_SIZE) || Match(TokenType.IS_CANVAS_COLOR))
             {
-                string nombre = Previous().Lexeme;
+                string name = Previous().Lexeme;
 
                 // Si es una llamada a función: nombre(...)
                 if (Match(TokenType.LPAREN))
@@ -260,23 +266,23 @@ namespace Wall_E
                     {
                         do
                         {
-                            args.Add(ParseExpresion());
+                            args.Add(ParseExpression());
                         } while (Match(TokenType.COMMA));
                     }
                     Consume(TokenType.RPAREN, "Falta ')' en llamada a función");
-                    return new FunctionCallExpr { FunctionName = nombre, Arguments = args };
+                    return new FunctionCallExpr { FunctionName = name, Arguments = args };
                 }
 
                 // Si es solo una variable
-                return new VariableExpr { Name = nombre };
+                return new VariableExpr { Name = name };
             }
 
-            throw new Exception($"[Línea {Peek().Line}] Expresión no válida");
+            throw new Exception($"[Line {Peek().Line}] Invalid expression");
         }
 
         #endregion
 
-        #region "Parsers específicos para cada comando"
+        #region SpecificCommandParsers
 
         // ---------------------
         // Comando: DrawLine(x, y, d)
@@ -287,19 +293,19 @@ namespace Wall_E
         private Code? ParseDrawLine()
         {
             Token token = Advance(); // Consume el token DRAW_LINE
-            int linea = token.Line;  // Guarda el número de línea para mensajes de error
+            int line = token.Line;   // Guarda el número de línea para mensajes de error
 
             if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de DrawLine");
 
-            int? dirX = ParseNumero(); // Primer parámetro: dirección X
+            int? dirX = ParseNumber(); // Primer parámetro: dirección X
             if (dirX == null) return null;
             if (!Match(TokenType.COMMA)) return Error("Falta ',' después de primer número");
 
-            int? dirY = ParseNumero(); // Segundo parámetro: dirección Y
+            int? dirY = ParseNumber(); // Segundo parámetro: dirección Y
             if (dirY == null) return null;
             if (!Match(TokenType.COMMA)) return Error("Falta ',' después de segundo número");
 
-            int? dist = ParseNumero(); // Tercer parámetro: distancia
+            int? dist = ParseNumber(); // Tercer parámetro: distancia
             if (dist == null) return null;
             if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de DrawLine");
 
@@ -309,7 +315,7 @@ namespace Wall_E
                 DirX = dirX.Value,
                 DirY = dirY.Value,
                 Distance = dist.Value,
-                Linea = linea
+                Line = line
             };
         }
 
@@ -322,15 +328,15 @@ namespace Wall_E
         private Code? ParseSpawn()
         {
             Token token = Advance(); // Consume el token SPAWN
-            int linea = token.Line;
+            int line = token.Line;
 
             if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Spawn");
 
-            int? x = ParseNumero(); // Primer parámetro: X
+            int? x = ParseNumber(); // Primer parámetro: X
             if (x == null) return null;
             if (!Match(TokenType.COMMA)) return Error("Falta ',' después de primer número");
 
-            int? y = ParseNumero(); // Segundo parámetro: Y
+            int? y = ParseNumber(); // Segundo parámetro: Y
             if (y == null) return null;
             if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de Spawn");
 
@@ -339,7 +345,7 @@ namespace Wall_E
             {
                 X = x.Value,
                 Y = y.Value,
-                Linea = linea
+                Line = line
             };
         }
 
@@ -352,14 +358,14 @@ namespace Wall_E
         private Code? ParseColor()
         {
             Token token = Advance(); // Consume el token COLOR
-            int linea = token.Line;
+            int line = token.Line;
 
             if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Color");
 
             // Espera un string como parámetro
             if (!Match(TokenType.STRING))
             {
-                Console.WriteLine($"[Línea {Peek().Line}] Se esperaba un string con el nombre del color");
+                Console.WriteLine($"[Line {Peek().Line}] Se esperaba un string con el nombre del color");
                 return null;
             }
 
@@ -370,8 +376,8 @@ namespace Wall_E
             // Si todo fue bien, crea y devuelve el comando ColorCommand
             return new ColorCommand
             {
-                NombreColor = color,
-                Linea = linea
+                ColorName = color,
+                Line = line
             };
         }
 
@@ -384,37 +390,37 @@ namespace Wall_E
         private Code? ParseSize()
         {
             Token token = Advance(); // Consume el token SIZE
-            int linea = token.Line;
+            int line = token.Line;
 
             if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Size");
 
-            int? valor = ParseNumero(); // Espera un número como parámetro
-            if (valor == null) return null;
+            int? value = ParseNumber(); // Espera un número como parámetro
+            if (value == null) return null;
 
             if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de Size");
 
             // Si todo fue bien, crea y devuelve el comando SizeCommand
             return new SizeCommand
             {
-                Valor = valor.Value,
-                Linea = linea
+                Value = value.Value,
+                Line = line
             };
         }
 
         #endregion
 
-        #region "Utilidades y métodos auxiliares"
+        #region Utilities
 
         /// <summary>
         /// Intenta analizar un número, si el token actual es un número lo consume y lo devuelve.
         /// </summary>
-        private int? ParseNumero()
+        private int? ParseNumber()
         {
             if (Match(TokenType.NUMBER))
             {
                 return int.Parse(Previous().Lexeme);
             }
-            Console.WriteLine($"[Línea {Peek().Line}] Se esperaba un número");
+            Console.WriteLine($"[Line {Peek().Line}] Se esperaba un número");
             return null;
         }
 
@@ -467,9 +473,9 @@ namespace Wall_E
         /// <summary>
         /// Muestra un mensaje de error y devuelve null.
         /// </summary>
-        private Code? Error(string mensaje)
+        private Code? Error(string message)
         {
-            Console.WriteLine($"[Línea {Peek().Line}] Error de sintaxis: {mensaje}");
+            Console.WriteLine($"[Line {Peek().Line}] Syntax error: {message}");
             return null;
         }
 
@@ -485,12 +491,13 @@ namespace Wall_E
         /// <summary>
         /// Consume un token del tipo esperado o lanza excepción si no lo encuentra.
         /// </summary>
-        private Token Consume(TokenType type, string mensaje)
+        private Token Consume(TokenType type, string message)
         {
             if (Check(type)) return Advance();
-            throw new Exception($"[Línea {Peek().Line}] {mensaje}");
+            throw new Exception($"[Line {Peek().Line}] {message}");
         }
 
         #endregion
     }
+    #endregion
 }

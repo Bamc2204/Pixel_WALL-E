@@ -2,7 +2,7 @@ using System;
 
 namespace Wall_E
 {
-    #region "Comando de Etiqueta"
+    #region LabelCommand
 
     /// <summary>
     /// Representa una etiqueta en el código, como 'loop-1'.
@@ -10,23 +10,27 @@ namespace Wall_E
     /// </summary>
     public class LabelCommand : Code
     {
-        #region "Propiedades"
+        #region Properties
 
         /// <summary>
         /// Nombre de la etiqueta definida.
+        /// Por ejemplo: 'inicio', 'loop-1', etc.
+        /// Esta propiedad almacena el identificador de la etiqueta que se usará para referencias en saltos o control de flujo.
         /// </summary>
-        public string Nombre { get; set; }
+        public string Name { get; set; }
 
         #endregion
 
-        #region "Métodos de Representación"
+        #region RepresentationMethods
 
         /// <summary>
         /// Devuelve una representación en texto de la etiqueta.
+        /// Incluye el nombre de la etiqueta y la línea donde está definida.
         /// </summary>
+        /// <returns>Cadena descriptiva de la etiqueta.</returns>
         public override string ToString()
         {
-            return $"Etiqueta: {Nombre} [línea {Linea}]";
+            return $"Etiqueta: {Name} [línea {Line}]";
         }
 
         #endregion

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 
 namespace Wall_E
 {
-    #region "Clase base de Expresiones"
+    #region "Expresiones del Parser"
+
+    #region BaseExpressionClass
 
     /// <summary>
     /// Clase base abstracta para cualquier tipo de expresión (literal, variable, operación, función...).
@@ -13,7 +15,7 @@ namespace Wall_E
 
     #endregion
 
-    #region "Expresión Literal"
+    #region LiteralExpression
 
     /// <summary>
     /// Representa un valor literal, como un número o una cadena.
@@ -29,7 +31,7 @@ namespace Wall_E
 
     #endregion
 
-    #region "Expresión de Variable"
+    #region VariableExpression
 
     /// <summary>
     /// Representa el uso de una variable, como x, y, total, etc.
@@ -44,7 +46,7 @@ namespace Wall_E
 
     #endregion
 
-    #region "Expresión Binaria"
+    #region BinaryExpression
 
     /// <summary>
     /// Representa una operación binaria, como suma, resta, multiplicación, etc.
@@ -68,7 +70,7 @@ namespace Wall_E
 
     #endregion
 
-    #region "Expresión de Llamada a Función"
+    #region FunctionCallExpression
 
     /// <summary>
     /// Representa una llamada a función, como GetActualX(), IsBrushColor("Blue"), etc.
@@ -84,6 +86,8 @@ namespace Wall_E
         /// </summary>
         public List<Expr> Arguments { get; set; } = new();
     }
+
+    #endregion
 
     #endregion
 }

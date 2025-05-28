@@ -1,6 +1,6 @@
 namespace Wall_E
 {
-    #region "Clase base de Comandos"
+    #region BaseCommandClass
 
     /// <summary>
     /// Clase abstracta base para todos los comandos que se pueden reconocer en el parser.
@@ -8,13 +8,13 @@ namespace Wall_E
     /// </summary>
     public abstract class Code
     {
-        #region "Propiedades"
+        #region Properties
 
         /// <summary>
         /// Propiedad que almacena el número de línea del código fuente donde se encontró el comando.
         /// Útil para mensajes de error y depuración.
         /// </summary>
-        public int Linea { get; set; }
+        public int Line { get; set; }
 
         #endregion
     }

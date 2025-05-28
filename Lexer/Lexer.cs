@@ -6,12 +6,14 @@ using Wall_E;
 
 namespace Wall_E
 {
+    #region LexerClass
+
     /// <summary>
     /// Clase encargada de analizar el texto fuente y convertirlo en una lista de tokens.
     /// </summary>
     public class Lexer
     {
-        #region "Campos y Constructor"
+        #region FieldsAndConstructor
 
         // Código fuente a analizar
         private readonly string _source;
@@ -33,7 +35,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Tokenización principal"
+        #region MainTokenization
 
         /// <summary>
         /// Método principal: recorre el código fuente y genera la lista de tokens.
@@ -65,15 +67,22 @@ namespace Wall_E
                     // Lee la palabra completa (letras, dígitos o guion bajo)
                     string word = ReadWhile(ch => char.IsLetterOrDigit(ch) || ch == '_');
 
-                    // Si justo después de un salto de línea y no hay asignación, es una etiqueta
-                    if (_newLineJustPassed && !IsAsignacionJustoDespues())
+                    // Detectar si es palabra clave primero
+                    Token tokenAux = KeywordOrIdentifier(word);
+
+                    // Si es una palabra clave, siempre la usamos como tal
+                    if (tokenAux.Type != TokenType.IDENTIFIER)
+                    {
+                        tokens.Add(tokenAux);
+                    }
+                    // Si está al inicio de línea y no tiene asignación, es una etiqueta
+                    else if (_newLineJustPassed && !IsAssignmentJustAfter())
                     {
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
                     }
                     else
                     {
-                        // Si no, es palabra clave o identificador
-                        tokens.Add(KeywordOrIdentifier(word));
+                        tokens.Add(tokenAux);
                     }
 
                     _newLineJustPassed = false;
@@ -121,7 +130,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Métodos auxiliares de navegación"
+        #region NavigationHelpers
 
         /// <summary>
         /// Verifica si se llegó al final del código fuente.
@@ -155,7 +164,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Lectura de palabras, números y cadenas"
+        #region ReadWordsNumbersStrings
 
         /// <summary>
         /// Lee caracteres mientras se cumpla la condición dada.
@@ -188,10 +197,10 @@ namespace Wall_E
 
         #endregion
 
-        #region "Palabras clave y identificadores"
+        #region KeywordsAndIdentifiers
 
         // Diccionario que asocia palabras clave con su tipo de token
-        private static readonly Dictionary<string, TokenType> PalabrasClave = new()
+        private static readonly Dictionary<string, TokenType> Keywords = new()
         {
             { "Spawn", TokenType.SPAWN },
             { "Color", TokenType.COLOR },
@@ -218,7 +227,7 @@ namespace Wall_E
         /// <returns>Token correspondiente.</returns>
         private Token KeywordOrIdentifier(string word)
         {
-            if (PalabrasClave.TryGetValue(word, out var type))
+            if (Keywords.TryGetValue(word, out var type))
             {
                 return new Token(type, word, _line);
             }
@@ -228,7 +237,7 @@ namespace Wall_E
 
         #endregion
 
-        #region "Reconocimiento de operadores y símbolos"
+        #region SymbolAndOperatorRecognition
 
         /// <summary>
         /// Reconoce operadores y símbolos individuales o compuestos.
@@ -276,12 +285,12 @@ namespace Wall_E
 
         #endregion
 
-        #region "Utilidades de análisis de contexto"
+        #region ContextAnalysisUtilities
 
         /// <summary>
         /// Verifica si el siguiente símbolo es una asignación pendiente ("<-").
         /// </summary>
-        private bool IsAsignacionPendiente()
+        private bool IsAssignmentPending()
         {
             return Peek() == '<' && PeekNext() == '-';
         }
@@ -289,7 +298,7 @@ namespace Wall_E
         /// <summary>
         /// Verifica si el siguiente símbolo es el inicio de una función inmediata ("(").
         /// </summary>
-        private bool IsFuncionInmediata()
+        private bool IsImmediateFunction()
         {
             return Peek() == '(';
         }
@@ -297,7 +306,7 @@ namespace Wall_E
         /// <summary>
         /// Verifica si justo después de la palabra hay un "<-".
         /// </summary>
-        private bool IsAsignacionJustoDespues()
+        private bool IsAssignmentJustAfter()
         {
             // Guardamos posición temporal
             int temp = _current;
@@ -314,4 +323,6 @@ namespace Wall_E
 
         #endregion
     }
+
+    #endregion
 }
