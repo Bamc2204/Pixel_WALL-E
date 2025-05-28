@@ -2,7 +2,12 @@ using System;
 
 namespace Wall_E
 {
-    // Enumeración que define todos los tipos de tokens que puede reconocer el lexer
+    #region "Enumeración de Tipos de Tokens"
+
+    /// <summary>
+    /// Enumeración que define todos los tipos de tokens que puede reconocer el lexer.
+    /// Cada valor representa un tipo de palabra clave, operador, literal, símbolo, etc.
+    /// </summary>
     public enum TokenType
     {
         #region "Palabras clave: comandos principales"
@@ -92,4 +97,6 @@ namespace Wall_E
 
         #endregion
     }
+
+    #endregion
 }

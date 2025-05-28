@@ -1,20 +1,44 @@
 namespace Wall_E
 {
-    // Clase que representa el comando DrawLine, utilizada para almacenar los parámetros del comando y su línea
-    public class DrawLineCommand : Comando
+    #region "Comando DrawLine"
+
+    /// <summary>
+    /// Clase que representa el comando DrawLine, utilizada para almacenar los parámetros del comando y su línea.
+    /// Permite dibujar una línea en el canvas en la dirección y distancia especificadas.
+    /// </summary>
+    public class DrawLineCommand : Code
     {
-        // Propiedad que indica la dirección X de la línea a dibujar
+        #region "Propiedades"
+
+        /// <summary>
+        /// Dirección X de la línea a dibujar.
+        /// </summary>
         public int DirX { get; set; }
-        // Propiedad que indica la dirección Y de la línea a dibujar
+
+        /// <summary>
+        /// Dirección Y de la línea a dibujar.
+        /// </summary>
         public int DirY { get; set; }
-        // Propiedad que indica la distancia (longitud) de la línea a dibujar
+
+        /// <summary>
+        /// Distancia (longitud) de la línea a dibujar.
+        /// </summary>
         public int Distance { get; set; }
 
-        // Sobrescribe el método ToString para mostrar el comando de forma legible
+        #endregion
+
+        #region "Métodos de Representación"
+
+        /// <summary>
+        /// Devuelve una representación en texto del comando DrawLine, mostrando sus parámetros y la línea.
+        /// </summary>
         public override string ToString()
         {
-            // Devuelve una cadena con el formato del comando y la línea donde se encontró
             return $"DrawLine({DirX}, {DirY}, {Distance}) [línea {Linea}]";
         }
+
+        #endregion
     }
+
+    #endregion
 }

@@ -3,19 +3,40 @@ using System.Collections.Generic;
 
 namespace Wall_E
 {
-    // Clase encargada de analizar el código fuente, obtener los tokens y mostrar resultados
-    public class AnalizadorDeCodigo
+    #region "Analizador de Código Fuente"
+
+    /// <summary>
+    /// Clase encargada de analizar el código fuente, obtener los tokens y mostrar resultados.
+    /// Puede ser utilizada como puente entre el editor, el lexer y el parser.
+    /// </summary>
+    public class CodeAnalyzer
     {
+        #region "Campos privados"
+
         // Variable privada que almacena el código fuente a analizar
         private readonly string _codigo;
 
-        // El código fuente se pasa como argumento al constructor
-        public AnalizadorDeCodigo(string codigo)
+        #endregion
+
+        #region "Constructor"
+
+        /// <summary>
+        /// El código fuente se pasa como argumento al constructor.
+        /// </summary>
+        /// <param name="codigo">Código fuente a analizar.</param>
+        public CodeAnalyzer(string codigo)
         {
             _codigo = codigo;
         }
 
-        // Método que utiliza el Lexer para obtener la lista de tokens del código fuente
+        #endregion
+
+        #region "Obtención de Tokens"
+
+        /// <summary>
+        /// Método que utiliza el Lexer para obtener la lista de tokens del código fuente.
+        /// </summary>
+        /// <returns>Lista de tokens generados por el lexer.</returns>
         public List<Token> ObtenerTokens()
         {
             // Crea una instancia del Lexer con el código fuente
@@ -24,7 +45,13 @@ namespace Wall_E
             return lexer.Tokenize();
         }
 
-        // Método que ejecuta el análisis y muestra los tokens generados por consola
+        #endregion
+
+        #region "Ejecución y Visualización"
+
+        /// <summary>
+        /// Método que ejecuta el análisis y muestra los tokens generados por consola.
+        /// </summary>
         public void EjecutarCodigo()
         {
             // Obtiene la lista de tokens usando el método anterior
@@ -44,5 +71,9 @@ namespace Wall_E
             // Executor executor = new Executor(comandos);
             // executor.Ejecutar();
         }
+
+        #endregion
     }
+
+    #endregion
 }

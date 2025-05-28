@@ -1,15 +1,39 @@
 namespace Wall_E
 {
-    // Clase que representa el comando Spawn, derivada de la clase base Comando
-    public class SpawnCommand : Comando
+    #region "Comando Spawn"
+
+    /// <summary>
+    /// Clase que representa el comando Spawn, utilizada para almacenar las coordenadas donde se debe crear un objeto.
+    /// Hereda de la clase base Code.
+    /// </summary>
+    public class SpawnCommand : Code
     {
-        // Propiedad que almacena la coordenada X donde se va a hacer el "spawn"
+        #region "Propiedades"
+
+        /// <summary>
+        /// Coordenada X donde se va a hacer el "spawn".
+        /// </summary>
         public int X { get; set; }
-        // Propiedad que almacena la coordenada Y donde se va a hacer el "spawn"
+
+        /// <summary>
+        /// Coordenada Y donde se va a hacer el "spawn".
+        /// </summary>
         public int Y { get; set; }
 
-        // Sobrescribe el método ToString para mostrar el comando de forma legible
-        public override string ToString() => $"Spawn({X}, {Y}) [línea {Linea}]";
-        // Devuelve una cadena con el formato del comando y la línea donde se encontró
+        #endregion
+
+        #region "Métodos de Representación"
+
+        /// <summary>
+        /// Devuelve una cadena con el formato del comando y la línea donde se encontró.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"Spawn({X}, {Y}) [línea {Linea}]";
+        }
+
+        #endregion
     }
+
+    #endregion
 }

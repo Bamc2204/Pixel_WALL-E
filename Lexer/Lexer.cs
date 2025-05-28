@@ -6,7 +6,9 @@ using Wall_E;
 
 namespace Wall_E
 {
-    // Clase encargada de analizar el texto fuente y convertirlo en una lista de tokens
+    /// <summary>
+    /// Clase encargada de analizar el texto fuente y convertirlo en una lista de tokens.
+    /// </summary>
     public class Lexer
     {
         #region "Campos y Constructor"
@@ -20,7 +22,10 @@ namespace Wall_E
         // Indica si acaba de pasar un salto de línea (para detectar etiquetas)
         private bool _newLineJustPassed = true;
 
-        // Constructor: recibe el código fuente como string
+        /// <summary>
+        /// Constructor: recibe el código fuente como string.
+        /// </summary>
+        /// <param name="source">El código fuente a analizar.</param>
         public Lexer(string source)
         {
             _source = source;
@@ -30,7 +35,10 @@ namespace Wall_E
 
         #region "Tokenización principal"
 
-        // Método principal: recorre el código fuente y genera la lista de tokens
+        /// <summary>
+        /// Método principal: recorre el código fuente y genera la lista de tokens.
+        /// </summary>
+        /// <returns>Lista de tokens generados a partir del código fuente.</returns>
         public List<Token> Tokenize()
         {
             List<Token> tokens = new();
@@ -51,24 +59,24 @@ namespace Wall_E
                     continue;
                 }
 
-                // Si el carácter es una letra o un guion, puede ser palabra clave, identificador o etiqueta
+                // Si el carácter es una letra o un guion bajo, puede ser palabra clave, identificador o etiqueta
                 if (char.IsLetter(Peek()) || Peek() == '_')
                 {
+                    // Lee la palabra completa (letras, dígitos o guion bajo)
                     string word = ReadWhile(ch => char.IsLetterOrDigit(ch) || ch == '_');
 
-                    // Si está al inicio de una línea, lo trata como etiqueta
-                    if (_newLineJustPassed)
+                    // Si justo después de un salto de línea y no hay asignación, es una etiqueta
+                    if (_newLineJustPassed && !IsAsignacionJustoDespues())
                     {
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
                     }
                     else
                     {
+                        // Si no, es palabra clave o identificador
                         tokens.Add(KeywordOrIdentifier(word));
                     }
 
-                    // Siempre se reinicia el indicador de línea nueva
                     _newLineJustPassed = false;
-
                     continue;
                 }
 
@@ -115,19 +123,29 @@ namespace Wall_E
 
         #region "Métodos auxiliares de navegación"
 
-        // Verifica si se llegó al final del código fuente
+        /// <summary>
+        /// Verifica si se llegó al final del código fuente.
+        /// </summary>
         private bool IsAtEnd() => _current >= _source.Length;
 
-        // Avanza al siguiente carácter y lo devuelve
+        /// <summary>
+        /// Avanza al siguiente carácter y lo devuelve.
+        /// </summary>
         private char Advance() => _source[_current++];
 
-        // Devuelve el carácter actual sin avanzar
+        /// <summary>
+        /// Devuelve el carácter actual sin avanzar.
+        /// </summary>
         private char Peek() => IsAtEnd() ? '\0' : _source[_current];
 
-        // Devuelve el carácter siguiente sin avanzar
+        /// <summary>
+        /// Devuelve el carácter siguiente sin avanzar.
+        /// </summary>
         private char PeekNext() => _current + 1 >= _source.Length ? '\0' : _source[_current + 1];
 
-        // Si el carácter actual es el esperado, avanza y devuelve true; si no, devuelve false
+        /// <summary>
+        /// Si el carácter actual es el esperado, avanza y devuelve true; si no, devuelve false.
+        /// </summary>
         private bool Match(char expected)
         {
             if (IsAtEnd() || Peek() != expected) return false;
@@ -139,7 +157,11 @@ namespace Wall_E
 
         #region "Lectura de palabras, números y cadenas"
 
-        // Lee caracteres mientras se cumpla la condición dada
+        /// <summary>
+        /// Lee caracteres mientras se cumpla la condición dada.
+        /// </summary>
+        /// <param name="condition">Función que indica si se debe seguir leyendo.</param>
+        /// <returns>Cadena leída.</returns>
         private string ReadWhile(Func<char, bool> condition)
         {
             int start = _current;
@@ -148,7 +170,10 @@ namespace Wall_E
             return _source[start.._current];
         }
 
-        // Lee una cadena de texto entre comillas
+        /// <summary>
+        /// Lee una cadena de texto entre comillas.
+        /// </summary>
+        /// <returns>Cadena leída.</returns>
         private string ReadString()
         {
             StringBuilder sb = new StringBuilder();
@@ -186,7 +211,11 @@ namespace Wall_E
             { "IsCanvasColor", TokenType.IS_CANVAS_COLOR },
         };
 
-        // Determina si una palabra es palabra clave o identificador
+        /// <summary>
+        /// Determina si una palabra es palabra clave o identificador.
+        /// </summary>
+        /// <param name="word">Palabra a analizar.</param>
+        /// <returns>Token correspondiente.</returns>
         private Token KeywordOrIdentifier(string word)
         {
             if (PalabrasClave.TryGetValue(word, out var type))
@@ -201,7 +230,11 @@ namespace Wall_E
 
         #region "Reconocimiento de operadores y símbolos"
 
-        // Reconoce operadores y símbolos individuales o compuestos
+        /// <summary>
+        /// Reconoce operadores y símbolos individuales o compuestos.
+        /// </summary>
+        /// <param name="c">Carácter a analizar.</param>
+        /// <returns>Token correspondiente o null si no reconoce el símbolo.</returns>
         private Token RecognizeSymbolOrOperator(char c)
         {
             switch (c)
@@ -239,6 +272,44 @@ namespace Wall_E
 
             // Si no reconoce el símbolo, devuelve null
             return null;
+        }
+
+        #endregion
+
+        #region "Utilidades de análisis de contexto"
+
+        /// <summary>
+        /// Verifica si el siguiente símbolo es una asignación pendiente ("<-").
+        /// </summary>
+        private bool IsAsignacionPendiente()
+        {
+            return Peek() == '<' && PeekNext() == '-';
+        }
+
+        /// <summary>
+        /// Verifica si el siguiente símbolo es el inicio de una función inmediata ("(").
+        /// </summary>
+        private bool IsFuncionInmediata()
+        {
+            return Peek() == '(';
+        }
+
+        /// <summary>
+        /// Verifica si justo después de la palabra hay un "<-".
+        /// </summary>
+        private bool IsAsignacionJustoDespues()
+        {
+            // Guardamos posición temporal
+            int temp = _current;
+
+            // Saltamos espacios en blanco
+            while (temp < _source.Length && char.IsWhiteSpace(_source[temp]))
+                temp++;
+
+            // Verificamos si hay un "<-"
+            return temp + 1 < _source.Length &&
+                _source[temp] == '<' &&
+                _source[temp + 1] == '-';
         }
 
         #endregion

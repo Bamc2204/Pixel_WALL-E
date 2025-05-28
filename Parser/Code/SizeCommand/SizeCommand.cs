@@ -1,13 +1,31 @@
 namespace Wall_E
 {
-    // Clase que representa el comando Size, derivada de la clase base Comando
-    public class SizeCommand : Comando
+    #region "Comando Size"
+
+    /// <summary>
+    /// Clase que representa el comando Size, utilizada para almacenar el valor del tamaño a establecer.
+    /// Hereda de la clase base Code.
+    /// </summary>
+    public class SizeCommand : Code
     {
-        // Propiedad pública que almacena el valor del tamaño a establecer
+        #region "Propiedades"
+
+        /// <summary>
+        /// Valor del tamaño que se va a establecer.
+        /// </summary>
         public int Valor { get; set; }
 
-        // Sobrescribe el método ToString para mostrar el comando de forma legible
+        #endregion
+
+        #region "Métodos de Representación"
+
+        /// <summary>
+        /// Devuelve una cadena con el formato del comando y la línea donde se encontró.
+        /// </summary>
         public override string ToString() => $"Size({Valor}) [línea {Linea}]";
-        // Devuelve una cadena con el formato del comando y la línea donde se encontró
+
+        #endregion
     }
+
+    #endregion
 }
