@@ -75,19 +75,24 @@ namespace Wall_E
             switch (token.Type)
             {
                 case TokenType.DRAW_LINE: return ParseGenericFunctionCall<DrawLineCommand>();
+                case TokenType.DRAW_CIRCLE: return ParseGenericFunctionCall<DrawCircleCommand>();
+                case TokenType.DRAW_RECTANGLE: return ParseGenericFunctionCall<DrawRectangleCommand>();
+                case TokenType.FILL: return ParseGenericFunctionCall<FillCommand>();
+
                 case TokenType.SPAWN: return ParseGenericFunctionCall<SpawnCommand>();
                 case TokenType.COLOR: return ParseGenericFunctionCall<ColorCommand>();
                 case TokenType.SIZE: return ParseGenericFunctionCall<SizeCommand>();
-                case TokenType.DRAW_CIRCLE: return ParseGenericFunctionCall<DrawCircleCommand>();
-                case TokenType.DRAW_RECTANGLE: return ParseGenericFunctionCall<DrawRectangleCommand>();
-                case TokenType.FILL: return new FillCommand { Line = token.Line }; // sin argumentos
+
                 case TokenType.LABEL_DEF: return ParseLabel();
                 case TokenType.GOTO: return ParseGoto();
                 case TokenType.IDENTIFIER: return CheckNext(TokenType.ASSIGN) ? ParseAssignment() : null;
+
                 default:
                     Console.WriteLine($"[Line {token.Line}] Unrecognized command: {token.Lexeme}");
                     return null;
             }
+
+
         }
 
         #endregion
@@ -164,7 +169,8 @@ namespace Wall_E
             string variable = id.Lexeme;
             int line = id.Line;
 
-            if (!Match(TokenType.ASSIGN)) return Error("Falta '<-' después del nombre de la variable");
+            if (!Match(TokenType.ASSIGN))
+                throw new EmptyExpressionError("assignment", line);
 
             Expr expr = ParseExpression();
             return new AssignmentCommand
@@ -174,6 +180,7 @@ namespace Wall_E
                 Line = line
             };
         }
+
 
         #endregion
 

@@ -12,7 +12,12 @@ class Program
         Size(2)
         DrawCircle(4)
         DrawRectangle(3, 6)
-        Fill()";
+        Fill()
+        total <- 3 + 5
+        n <- 5
+        x <- GetActualX()
+        y <- x + 2
+        ";
 
         // Analiza el código fuente
         CodeAnalyzer analizador = new CodeAnalyzer(codigo);
