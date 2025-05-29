@@ -1,0 +1,15 @@
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0-windows\Back-end.exe
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0-windows\Back-end.deps.json
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0-windows\Back-end.runtimeconfig.json
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0-windows\Back-end.dll
+D:\Programacion\Proyectos\Walle\Back-end\bin\Debug\net9.0-windows\Back-end.pdb
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\Back-end.GeneratedMSBuildEditorConfig.editorconfig
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\Back-end.AssemblyInfoInputs.cache
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\Back-end.AssemblyInfo.cs
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\Back-end.csproj.CoreCompileInputs.cache
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\Back-end.sourcelink.json
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\Back-end.dll
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\refint\Back-end.dll
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\Back-end.pdb
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\Back-end.genruntimeconfig.cache
+D:\Programacion\Proyectos\Walle\Back-end\obj\Debug\net9.0-windows\ref\Back-end.dll

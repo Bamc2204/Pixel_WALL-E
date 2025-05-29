@@ -1,12 +1,9 @@
-#region Using
 using System;
 using System.Collections.Generic;
-#endregion
-
 
 namespace Wall_E
 {
-    #region Executor Class
+    #region ExecutorClass
 
     /// <summary>
     /// Clase principal encargada de ejecutar una lista de comandos de código.
@@ -21,7 +18,7 @@ namespace Wall_E
 
         #endregion
 
-        #region Execute Method
+        #region ExecuteMethod
 
         /// <summary>
         /// Ejecuta una lista de comandos de código.
@@ -64,7 +61,7 @@ namespace Wall_E
 
         #endregion
 
-        #region Execute Code
+        #region ExecuteCode
 
         /// <summary>
         /// Ejecuta un solo comando de código según su tipo.
@@ -90,14 +87,25 @@ namespace Wall_E
                     break;
 
                 default:
-                    Console.WriteLine($"[Line {code.Line}] Command not implemented.");
+                    if (code is GraphicCommand gc)
+                    {
+                        // Ejecuta comandos gráficos mostrando su nombre y argumentos evaluados
+                        string cmdName = code.GetType().Name.Replace("Command", "");
+                        string argsStr = string.Join(", ", gc.Arguments.ConvertAll(EvaluateExpression));
+                        Console.WriteLine($"[Line {code.Line}] {cmdName}({argsStr})");
+                    }
+                    else
+                    {
+                        // Si el comando no está implementado, muestra un mensaje
+                        Console.WriteLine($"[Line {code.Line}] Command not implemented.");
+                    }
                     break;
             }
         }
 
         #endregion
 
-        #region Evaluate Expression
+        #region EvaluateExpression
 
         /// <summary>
         /// Evalúa una expresión y devuelve su valor entero.
@@ -110,14 +118,17 @@ namespace Wall_E
             switch (expr)
             {
                 case LiteralExpr l:
+                    // Devuelve el valor literal como entero
                     return int.Parse(l.Value);
 
                 case VariableExpr v:
+                    // Devuelve el valor de la variable si existe
                     if (_variables.TryGetValue(v.Name, out int val))
                         return val;
                     throw new Exception($"Undefined variable: {v.Name}");
 
                 case BinaryExpr b:
+                    // Evalúa la operación binaria según el operador
                     int left = EvaluateExpression(b.Left);
                     int right = EvaluateExpression(b.Right);
                     return b.Operator switch
@@ -152,7 +163,7 @@ namespace Wall_E
 
         #endregion
 
-        #region Evaluate Built-in Functions
+        #region EvaluateBuiltInFunctions
 
         /// <summary>
         /// Evalúa la función IsBrushColor, retorna 1 si el color es "blue", 0 en otro caso.
@@ -209,7 +220,7 @@ namespace Wall_E
 
         #endregion
 
-        #region Evaluate Goto Conditions
+        #region EvaluateGotoConditions
 
         /// <summary>
         /// Evalúa una condición textual para un salto (goto).
@@ -268,7 +279,7 @@ namespace Wall_E
 
         #endregion
 
-        #region Build Label Map
+        #region BuildLabelMap
 
         /// <summary>
         /// Construye un diccionario que mapea nombres de etiquetas a sus posiciones en la lista de comandos.

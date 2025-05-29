@@ -1,28 +1,32 @@
+using System.Collections.Generic;
+
 namespace Wall_E
 {
     #region SizeCommand
 
     /// <summary>
-    /// Clase que representa el comando Size, utilizada para almacenar el valor del tamaño a establecer.
-    /// Hereda de la clase base Code.
+    /// Representa el comando Size, encargado de almacenar los argumentos necesarios para definir un tamaño.
+    /// Hereda de la clase base GraphicCommand.
     /// </summary>
-    public class SizeCommand : Code
+    public class SizeCommand : GraphicCommand
     {
         #region Properties
 
         /// <summary>
-        /// Valor del tamaño que se va a establecer.
+        /// Lista de argumentos para el comando Size.
+        /// Cada argumento es una expresión que representa un valor necesario para definir el tamaño.
         /// </summary>
-        public int Value { get; set; }
+        public List<Expr> Arguments { get; set; } = new();
 
         #endregion
 
-        #region RepresentationMethods
+        #region Methods
 
         /// <summary>
-        /// Devuelve una cadena con el formato del comando y la línea donde se encontró.
+        /// Devuelve una representación en texto del comando Size, incluyendo sus argumentos y la línea donde se encuentra.
         /// </summary>
-        public override string ToString() => $"Size({Value}) [línea {Line}]";
+        public override string ToString() =>
+            $"Size({string.Join(", ", Arguments)}) [line {Line}]";
 
         #endregion
     }

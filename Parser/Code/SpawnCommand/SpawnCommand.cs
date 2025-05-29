@@ -4,9 +4,9 @@ namespace Wall_E
 
     /// <summary>
     /// Clase que representa el comando Spawn, utilizada para almacenar las coordenadas donde se debe crear un objeto.
-    /// Hereda de la clase base Code.
+    /// Hereda de la clase base GraphicCommand.
     /// </summary>
-    public class SpawnCommand : Code
+    public class SpawnCommand : GraphicCommand
     {
         #region Properties
 

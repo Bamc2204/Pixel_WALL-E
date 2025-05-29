@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Wall_E
 {
-    #region "Expresiones del Parser"
+    #region ParserExpressions
 
     #region BaseExpressionClass
 

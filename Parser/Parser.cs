@@ -1,26 +1,25 @@
 using System;
 using System.Collections.Generic;
-using Wall_E;
 
 namespace Wall_E
 {
-    #region Parser Class 
+    #region ParserClass
+
     /// <summary>
-    /// Clase encargada de analizar una lista de tokens y convertirlos en comandos ejecutables.
+    /// Clase encargada de analizar una lista de tokens y convertirlos en una lista de comandos (AST).
     /// </summary>
     public class Parser
     {
         #region FieldsAndConstructor
 
-        // Lista de tokens generados por el lexer
+        // Lista de tokens a analizar
         private readonly List<Token> _tokens;
-        // Índice del token actual que se está procesando
+        // Índice actual en la lista de tokens
         private int _current = 0;
 
         /// <summary>
-        /// Constructor: recibe la lista de tokens a analizar.
+        /// Constructor que recibe la lista de tokens a procesar.
         /// </summary>
-        /// <param name="tokens">Lista de tokens generados por el lexer.</param>
         public Parser(List<Token> tokens)
         {
             _tokens = tokens;
@@ -31,14 +30,12 @@ namespace Wall_E
         #region MainParseMethod
 
         /// <summary>
-        /// Método principal: recorre todos los tokens y construye una lista de comandos válidos.
+        /// Método principal que recorre todos los tokens y genera la lista de comandos.
         /// </summary>
-        /// <returns>Lista de comandos reconocidos.</returns>
         public List<Code> Parse()
         {
             List<Code> codes = new();
 
-            // Mientras no se llegue al final de los tokens
             while (!IsAtEnd())
             {
                 // Ignora líneas vacías
@@ -52,15 +49,15 @@ namespace Wall_E
                 Code cmd = ParseCode();
                 if (cmd != null)
                 {
-                    codes.Add(cmd); // Agrega el comando reconocido a la lista
+                    codes.Add(cmd);
                 }
                 else
                 {
-                    Advance(); // Evita bucle infinito si no se reconoce el comando
+                    // Si no reconoce el comando, avanza al siguiente token
+                    Advance();
                 }
             }
 
-            // Devuelve la lista de comandos reconocidos
             return codes;
         }
 
@@ -69,24 +66,25 @@ namespace Wall_E
         #region CommandRecognition
 
         /// <summary>
-        /// Reconoce el tipo de comando según el token actual.
+        /// Reconoce el tipo de comando según el token actual y llama al método de análisis correspondiente.
         /// </summary>
-        /// <returns>Comando reconocido o null si no se reconoce.</returns>
         private Code? ParseCode()
         {
-            Token token = Peek(); // Obtiene el token actual sin avanzar
+            Token token = Peek();
 
             switch (token.Type)
             {
-                case TokenType.DRAW_LINE: return ParseDrawLine(); // Si es DrawLine, llama a su parser
-                case TokenType.SPAWN: return ParseSpawn();         // Si es Spawn, llama a su parser
-                case TokenType.COLOR: return ParseColor();         // Si es Color, llama a su parser
-                case TokenType.SIZE: return ParseSize();           // Si es Size, llama a su parser
-                case TokenType.LABEL_DEF: return ParseLabel();     // Si es una etiqueta, llama a su parser
-                case TokenType.GOTO: return ParseGoto();           // Si es Goto, llama a su parser
-                case TokenType.IDENTIFIER: return CheckNext(TokenType.ASSIGN) ? ParseAssignment() : null; // Asignación
+                case TokenType.DRAW_LINE: return ParseGenericFunctionCall<DrawLineCommand>();
+                case TokenType.SPAWN: return ParseGenericFunctionCall<SpawnCommand>();
+                case TokenType.COLOR: return ParseGenericFunctionCall<ColorCommand>();
+                case TokenType.SIZE: return ParseGenericFunctionCall<SizeCommand>();
+                case TokenType.DRAW_CIRCLE: return ParseGenericFunctionCall<DrawCircleCommand>();
+                case TokenType.DRAW_RECTANGLE: return ParseGenericFunctionCall<DrawRectangleCommand>();
+                case TokenType.FILL: return new FillCommand { Line = token.Line }; // sin argumentos
+                case TokenType.LABEL_DEF: return ParseLabel();
+                case TokenType.GOTO: return ParseGoto();
+                case TokenType.IDENTIFIER: return CheckNext(TokenType.ASSIGN) ? ParseAssignment() : null;
                 default:
-                    // Si el comando no es reconocido, muestra un mensaje de error
                     Console.WriteLine($"[Line {token.Line}] Unrecognized command: {token.Lexeme}");
                     return null;
             }
@@ -97,7 +95,7 @@ namespace Wall_E
         #region ParseLabel
 
         /// <summary>
-        /// Analiza una etiqueta (LABEL_DEF).
+        /// Analiza una etiqueta y la convierte en un LabelCommand.
         /// </summary>
         private Code? ParseLabel()
         {
@@ -114,31 +112,25 @@ namespace Wall_E
         #region ParseGoto
 
         /// <summary>
-        /// Analiza el comando Goto con condición.
+        /// Analiza un comando Goto, extrayendo la etiqueta de destino y la condición.
         /// </summary>
         private Code? ParseGoto()
         {
-            Token token = Advance(); // consume 'Goto'
+            Token token = Advance();
             int line = token.Line;
 
-            if (!Match(TokenType.LBRACKET))
-                return Error("Falta '[' después de 'Goto'");
-
-            if (!Match(TokenType.IDENTIFIER))
-                return Error("Se esperaba el nombre de la etiqueta dentro de [ ]");
+            if (!Match(TokenType.LBRACKET)) return Error("Falta '[' después de 'Goto'");
+            if (!Match(TokenType.IDENTIFIER)) return Error("Se esperaba el nombre de la etiqueta dentro de [ ]");
 
             string label = Previous().Lexeme;
 
-            if (!Match(TokenType.RBRACKET))
-                return Error("Falta ']' después del nombre de la etiqueta");
+            if (!Match(TokenType.RBRACKET)) return Error("Falta ']' después del nombre de la etiqueta");
+            if (!Match(TokenType.LPAREN)) return Error("Falta '(' para la condición del Goto");
 
-            if (!Match(TokenType.LPAREN))
-                return Error("Falta '(' para la condición del Goto");
-
-            // Captura condicional como string crudo (hasta cerrar el paréntesis)
             string condition = "";
             int depth = 1;
 
+            // Lee la condición entre paréntesis, permitiendo anidamiento
             while (!IsAtEnd() && depth > 0)
             {
                 Token t = Advance();
@@ -164,7 +156,7 @@ namespace Wall_E
         #region ParseAssignment
 
         /// <summary>
-        /// Analiza una asignación de variable (IDENTIFIER <- expresión).
+        /// Analiza una asignación de variable.
         /// </summary>
         private Code? ParseAssignment()
         {
@@ -172,8 +164,7 @@ namespace Wall_E
             string variable = id.Lexeme;
             int line = id.Line;
 
-            if (!Match(TokenType.ASSIGN))
-                return Error("Falta '<-' después del nombre de la variable");
+            if (!Match(TokenType.ASSIGN)) return Error("Falta '<-' después del nombre de la variable");
 
             Expr expr = ParseExpression();
             return new AssignmentCommand
@@ -189,15 +180,12 @@ namespace Wall_E
         #region ParseExpressionWithOperators
 
         /// <summary>
-        /// Analiza una expresión completa (soporta suma, resta, multiplicación, división, potencias, etc.).
+        /// Analiza una expresión, soportando operadores aritméticos.
         /// </summary>
-        private Expr ParseExpression()
-        {
-            return ParseAddSubtract();
-        }
+        private Expr ParseExpression() => ParseAddSubtract();
 
         /// <summary>
-        /// Analiza sumas y restas (precedencia menor).
+        /// Analiza sumas y restas.
         /// </summary>
         private Expr ParseAddSubtract()
         {
@@ -207,19 +195,14 @@ namespace Wall_E
             {
                 string op = Previous().Lexeme;
                 Expr right = ParseMultiply();
-                expr = new BinaryExpr
-                {
-                    Operator = op,
-                    Left = expr,
-                    Right = right
-                };
+                expr = new BinaryExpr { Operator = op, Left = expr, Right = right };
             }
 
             return expr;
         }
 
         /// <summary>
-        /// Analiza multiplicaciones, divisiones, módulo y potencias (precedencia mayor).
+        /// Analiza multiplicaciones, divisiones, módulo y potencia.
         /// </summary>
         private Expr ParseMultiply()
         {
@@ -229,36 +212,25 @@ namespace Wall_E
             {
                 string op = Previous().Lexeme;
                 Expr right = ParsePrimary();
-                expr = new BinaryExpr
-                {
-                    Operator = op,
-                    Left = expr,
-                    Right = right
-                };
+                expr = new BinaryExpr { Operator = op, Left = expr, Right = right };
             }
 
             return expr;
         }
 
         /// <summary>
-        /// Analiza valores primarios: números, strings, variables, llamadas a funciones.
+        /// Analiza expresiones primarias: literales, variables y llamadas a funciones.
         /// </summary>
         private Expr ParsePrimary()
         {
-            if (Match(TokenType.NUMBER))
-                return new LiteralExpr { Value = Previous().Lexeme };
+            if (Match(TokenType.NUMBER)) return new LiteralExpr { Value = Previous().Lexeme };
+            if (Match(TokenType.STRING)) return new LiteralExpr { Value = $"\"{Previous().Lexeme}\"" };
 
-            if (Match(TokenType.STRING))
-                return new LiteralExpr { Value = $"\"{Previous().Lexeme}\"" };
-
-            // Identificadores, funciones y variables
             if (Match(TokenType.IDENTIFIER) || Match(TokenType.IS_BRUSH_COLOR) || Match(TokenType.GET_ACTUAL_X)
                 || Match(TokenType.GET_ACTUAL_Y) || Match(TokenType.GET_CANVAS_SIZE) || Match(TokenType.GET_COLOR_COUNT)
                 || Match(TokenType.IS_BRUSH_SIZE) || Match(TokenType.IS_CANVAS_COLOR))
             {
                 string name = Previous().Lexeme;
-
-                // Si es una llamada a función: nombre(...)
                 if (Match(TokenType.LPAREN))
                 {
                     List<Expr> args = new();
@@ -272,8 +244,6 @@ namespace Wall_E
                     Consume(TokenType.RPAREN, "Falta ')' en llamada a función");
                     return new FunctionCallExpr { FunctionName = name, Arguments = args };
                 }
-
-                // Si es solo una variable
                 return new VariableExpr { Name = name };
             }
 
@@ -282,163 +252,19 @@ namespace Wall_E
 
         #endregion
 
-        #region SpecificCommandParsers
-
-        // ---------------------
-        // Comando: DrawLine(x, y, d)
-        // ---------------------
-        /// <summary>
-        /// Analiza el comando DrawLine(x, y, d).
-        /// </summary>
-        private Code? ParseDrawLine()
-        {
-            Token token = Advance(); // Consume el token DRAW_LINE
-            int line = token.Line;   // Guarda el número de línea para mensajes de error
-
-            if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de DrawLine");
-
-            int? dirX = ParseNumber(); // Primer parámetro: dirección X
-            if (dirX == null) return null;
-            if (!Match(TokenType.COMMA)) return Error("Falta ',' después de primer número");
-
-            int? dirY = ParseNumber(); // Segundo parámetro: dirección Y
-            if (dirY == null) return null;
-            if (!Match(TokenType.COMMA)) return Error("Falta ',' después de segundo número");
-
-            int? dist = ParseNumber(); // Tercer parámetro: distancia
-            if (dist == null) return null;
-            if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de DrawLine");
-
-            // Si todo fue bien, crea y devuelve el comando DrawLineCommand
-            return new DrawLineCommand
-            {
-                DirX = dirX.Value,
-                DirY = dirY.Value,
-                Distance = dist.Value,
-                Line = line
-            };
-        }
-
-        // ---------------------
-        // Comando: Spawn(x, y)
-        // ---------------------
-        /// <summary>
-        /// Analiza el comando Spawn(x, y).
-        /// </summary>
-        private Code? ParseSpawn()
-        {
-            Token token = Advance(); // Consume el token SPAWN
-            int line = token.Line;
-
-            if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Spawn");
-
-            int? x = ParseNumber(); // Primer parámetro: X
-            if (x == null) return null;
-            if (!Match(TokenType.COMMA)) return Error("Falta ',' después de primer número");
-
-            int? y = ParseNumber(); // Segundo parámetro: Y
-            if (y == null) return null;
-            if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de Spawn");
-
-            // Si todo fue bien, crea y devuelve el comando SpawnCommand
-            return new SpawnCommand
-            {
-                X = x.Value,
-                Y = y.Value,
-                Line = line
-            };
-        }
-
-        // ---------------------
-        // Comando: Color("nombre")
-        // ---------------------
-        /// <summary>
-        /// Analiza el comando Color("nombre").
-        /// </summary>
-        private Code? ParseColor()
-        {
-            Token token = Advance(); // Consume el token COLOR
-            int line = token.Line;
-
-            if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Color");
-
-            // Espera un string como parámetro
-            if (!Match(TokenType.STRING))
-            {
-                Console.WriteLine($"[Line {Peek().Line}] Se esperaba un string con el nombre del color");
-                return null;
-            }
-
-            string color = Previous().Lexeme; // Obtiene el nombre del color
-
-            if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de Color");
-
-            // Si todo fue bien, crea y devuelve el comando ColorCommand
-            return new ColorCommand
-            {
-                ColorName = color,
-                Line = line
-            };
-        }
-
-        // ---------------------
-        // Comando: Size(n)
-        // ---------------------
-        /// <summary>
-        /// Analiza el comando Size(n).
-        /// </summary>
-        private Code? ParseSize()
-        {
-            Token token = Advance(); // Consume el token SIZE
-            int line = token.Line;
-
-            if (!Match(TokenType.LPAREN)) return Error("Falta '(' después de Size");
-
-            int? value = ParseNumber(); // Espera un número como parámetro
-            if (value == null) return null;
-
-            if (!Match(TokenType.RPAREN)) return Error("Falta ')' al final de Size");
-
-            // Si todo fue bien, crea y devuelve el comando SizeCommand
-            return new SizeCommand
-            {
-                Value = value.Value,
-                Line = line
-            };
-        }
-
-        #endregion
-
         #region Utilities
 
         /// <summary>
-        /// Intenta analizar un número, si el token actual es un número lo consume y lo devuelve.
-        /// </summary>
-        private int? ParseNumber()
-        {
-            if (Match(TokenType.NUMBER))
-            {
-                return int.Parse(Previous().Lexeme);
-            }
-            Console.WriteLine($"[Line {Peek().Line}] Se esperaba un número");
-            return null;
-        }
-
-        /// <summary>
-        /// Si el token actual es del tipo esperado, lo consume y devuelve true; si no, devuelve false.
+        /// Avanza si el siguiente token es del tipo esperado.
         /// </summary>
         private bool Match(TokenType type)
         {
-            if (Check(type))
-            {
-                Advance();
-                return true;
-            }
+            if (Check(type)) { Advance(); return true; }
             return false;
         }
 
         /// <summary>
-        /// Verifica si el token actual es del tipo esperado sin consumirlo.
+        /// Verifica si el token actual es del tipo esperado.
         /// </summary>
         private bool Check(TokenType type)
         {
@@ -447,7 +273,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Avanza al siguiente token y devuelve el token anterior.
+        /// Avanza al siguiente token y retorna el anterior.
         /// </summary>
         private Token Advance()
         {
@@ -461,17 +287,22 @@ namespace Wall_E
         private bool IsAtEnd() => Peek().Type == TokenType.EOF;
 
         /// <summary>
-        /// Devuelve el token actual sin avanzar.
+        /// Retorna el token actual.
         /// </summary>
         private Token Peek() => _tokens[_current];
 
         /// <summary>
-        /// Devuelve el token anterior al actual.
+        /// Retorna el token anterior.
         /// </summary>
         private Token Previous() => _tokens[_current - 1];
 
         /// <summary>
-        /// Muestra un mensaje de error y devuelve null.
+        /// Verifica si el siguiente token es del tipo esperado.
+        /// </summary>
+        private bool CheckNext(TokenType type) => _current + 1 < _tokens.Count && _tokens[_current + 1].Type == type;
+
+        /// <summary>
+        /// Muestra un error de sintaxis y retorna null.
         /// </summary>
         private Code? Error(string message)
         {
@@ -480,21 +311,42 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Verifica si el siguiente token es del tipo esperado.
-        /// </summary>
-        private bool CheckNext(TokenType type)
-        {
-            if (_current + 1 >= _tokens.Count) return false;
-            return _tokens[_current + 1].Type == type;
-        }
-
-        /// <summary>
-        /// Consume un token del tipo esperado o lanza excepción si no lo encuentra.
+        /// Consume el token si es del tipo esperado, si no lanza excepción.
         /// </summary>
         private Token Consume(TokenType type, string message)
         {
             if (Check(type)) return Advance();
             throw new Exception($"[Line {Peek().Line}] {message}");
+        }
+
+        #endregion
+
+        #region GenericFunctionCallParser
+
+        /// <summary>
+        /// Analiza comandos gráficos genéricos que reciben argumentos entre paréntesis.
+        /// </summary>
+        private Code ParseGenericFunctionCall<T>() where T : GraphicCommand, new()
+        {
+            Token t = Advance();
+            int line = t.Line;
+
+            if (!Match(TokenType.LPAREN))
+                throw new Exception($"[Line {line}] Expected '(' after {t.Lexeme}");
+
+            List<Expr> args = new();
+
+            if (!Check(TokenType.RPAREN))
+            {
+                do
+                {
+                    args.Add(ParseExpression());
+                } while (Match(TokenType.COMMA));
+            }
+
+            Consume(TokenType.RPAREN, "Expected ')' after arguments");
+
+            return new T { Line = line, Arguments = args };
         }
 
         #endregion

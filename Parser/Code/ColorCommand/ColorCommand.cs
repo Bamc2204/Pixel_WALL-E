@@ -1,28 +1,32 @@
+using System.Collections.Generic;
+
 namespace Wall_E
 {
     #region ColorCommand
 
     /// <summary>
-    /// Clase que representa el comando Color, utilizada para almacenar el nombre del color a utilizar.
-    /// Hereda de la clase base Code.
+    /// Representa el comando Color, encargado de almacenar los argumentos necesarios para definir un color.
+    /// Hereda de la clase base GraphicCommand.
     /// </summary>
-    public class ColorCommand : Code
+    public class ColorCommand : GraphicCommand
     {
         #region Properties
 
         /// <summary>
-        /// Nombre del color que se va a utilizar.
+        /// Lista de argumentos para el comando Color.
+        /// Cada argumento es una expresión que representa un valor necesario para definir el color.
         /// </summary>
-        public string ColorName { get; set; }
+        public List<Expr> Arguments { get; set; } = new();
 
         #endregion
 
-        #region RepresentationMethods
+        #region Methods
 
         /// <summary>
-        /// Devuelve una cadena con el formato del comando y la línea donde se encontró.
+        /// Devuelve una representación en texto del comando Color, incluyendo sus argumentos y la línea donde se encuentra.
         /// </summary>
-        public override string ToString() => $"Color(\"{ColorName}\") [línea {Line}]";
+        public override string ToString() =>
+            $"Color({string.Join(", ", Arguments)}) [line {Line}]";
 
         #endregion
     }

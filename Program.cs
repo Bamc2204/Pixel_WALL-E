@@ -8,13 +8,11 @@ class Program
     {
         Console.Clear();
         // Código de prueba con asignaciones y funciones
-        string codigo = @"i <- 0
-        loop_1
-        Goto [end] (i >= 3)
-        i <- i + 1
-        Goto [loop_1] (1 == 1)
-        end
-        ";
+        string codigo = @"Color(""Green"")
+        Size(2)
+        DrawCircle(4)
+        DrawRectangle(3, 6)
+        Fill()";
 
         // Analiza el código fuente
         CodeAnalyzer analizador = new CodeAnalyzer(codigo);
