@@ -4,22 +4,31 @@ using System.Windows.Forms;
 
 namespace Wall_E
 {
+    /// <summary>
+    /// Panel personalizado para dibujar píxeles, líneas, círculos y otras figuras.
+    /// </summary>
     public class PixelCanvas : Panel
     {
         #region Fields
-
+        // Tamaño de cada píxel en pantalla
         private const int PixelSize = 20;
+        // Matriz que almacena el color de cada píxel
         private readonly int[,] _pixels;
+        // Número de columnas del canvas
         private readonly int _cols;
+        // Número de filas del canvas
         private readonly int _rows;
 
+        // Tamaño actual del pincel
         private int _brushSize = 1;
+        // Color actual del pincel
         private Color _brushColor = Color.Black;
-
         #endregion
 
         #region Constructor
-
+        /// <summary>
+        /// Inicializa el canvas con el número de columnas y filas especificado.
+        /// </summary>
         public PixelCanvas(int cols = 32, int rows = 32)
         {
             _cols = cols;
@@ -31,20 +40,34 @@ namespace Wall_E
             this.DoubleBuffered = true;
             this.BackColor = Color.White;
         }
-
         #endregion
 
         #region Properties
-
+        /// <summary>
+        /// Establece el color actual del pincel.
+        /// </summary>
         public void SetColor(Color color) => _brushColor = color;
-        public Color GetCurrentColor() => _brushColor;
-        public void SetBrushColor(Color color) => _brushColor = color;
-        public void SetBrushSize(int size) => _brushSize = size;
 
+        /// <summary>
+        /// Obtiene el color actual del pincel.
+        /// </summary>
+        public Color GetCurrentColor() => _brushColor;
+
+        /// <summary>
+        /// Establece el color del pincel.
+        /// </summary>
+        public void SetBrushColor(Color color) => _brushColor = color;
+
+        /// <summary>
+        /// Establece el tamaño del pincel.
+        /// </summary>
+        public void SetBrushSize(int size) => _brushSize = size;
         #endregion
 
         #region Drawing Methods
-
+        /// <summary>
+        /// Dibuja una línea desde el centro del canvas en la dirección y distancia indicadas.
+        /// </summary>
         public void DrawLine(int dx, int dy, int distance)
         {
             int x = _cols / 2;
@@ -60,6 +83,9 @@ namespace Wall_E
             Invalidate();
         }
 
+        /// <summary>
+        /// Dibuja un círculo centrado en el canvas.
+        /// </summary>
         public void DrawCircle(int radius, Color brushColor, int brushSize)
         {
             int cx = _cols / 2;
@@ -76,6 +102,9 @@ namespace Wall_E
             Invalidate();
         }
 
+        /// <summary>
+        /// Dibuja un rectángulo centrado en el canvas.
+        /// </summary>
         public void DrawRectangle(int width, int height, Color color, int size)
         {
             int cx = _cols / 2;
@@ -96,7 +125,9 @@ namespace Wall_E
             Invalidate();
         }
 
-
+        /// <summary>
+        /// Rellena todo el canvas con el color especificado.
+        /// </summary>
         public void Fill(Color color)
         {
             for (int x = 0; x < _cols; x++)
@@ -109,17 +140,20 @@ namespace Wall_E
 
             this.Invalidate(); // Redibuja el canvas con el nuevo color
         }
-
-
         #endregion
 
         #region Utility Methods
-
+        /// <summary>
+        /// Dibuja un punto en la posición indicada usando el color y tamaño actuales del pincel.
+        /// </summary>
         private void DrawPoint(int cx, int cy)
         {
             DrawPoint(cx, cy, _brushColor, _brushSize);
         }
 
+        /// <summary>
+        /// Dibuja un punto en la posición indicada con el color y tamaño especificados.
+        /// </summary>
         private void DrawPoint(int cx, int cy, Color color, int size)
         {
             for (int dx = -size / 2; dx <= size / 2; dx++)
@@ -135,6 +169,9 @@ namespace Wall_E
             }
         }
 
+        /// <summary>
+        /// Limpia el canvas y lo deja en blanco.
+        /// </summary>
         public void Clear()
         {
             for (int x = 0; x < _cols; x++)
@@ -144,21 +181,27 @@ namespace Wall_E
             Invalidate();
         }
 
+        /// <summary>
+        /// Verifica si una posición está dentro de los límites del canvas.
+        /// </summary>
         public bool IsInBounds(int x, int y)
         {
             return x >= 0 && x < _cols && y >= 0 && y < _rows;
         }
 
+        /// <summary>
+        /// Dibuja un punto en la posición indicada con el color y tamaño especificados (alias para DrawPoint).
+        /// </summary>
         public void Spawn(int x, int y, Color color, int size)
         {
             DrawPoint(x, y, color, size);
         }
-
-
         #endregion
 
         #region Paint
-
+        /// <summary>
+        /// Dibuja el contenido del canvas en pantalla.
+        /// </summary>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -175,7 +218,6 @@ namespace Wall_E
                 }
             }
         }
-
         #endregion
     }
 }

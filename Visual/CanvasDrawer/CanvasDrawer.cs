@@ -12,7 +12,6 @@ namespace Wall_E
     public class CanvasDrawer
     {
         #region Fields
-
         // Referencia al PictureBox donde se dibuja
         private readonly PictureBox _canvas;
         // Imagen en memoria donde se dibuja antes de mostrar en pantalla
@@ -21,11 +20,9 @@ namespace Wall_E
         private Graphics _graphics;
         // Tamaño de cada "píxel" de la cuadrícula
         private int _pixelSize = 10;
-
         #endregion
 
         #region Constructor
-
         /// <summary>
         /// Constructor que recibe el PictureBox en el cual se dibuja.
         /// </summary>
@@ -35,11 +32,9 @@ namespace Wall_E
             _canvas = canvas;
             Initialize();
         }
-
         #endregion
 
         #region Initialization
-
         /// <summary>
         /// Inicializa el bitmap y el objeto Graphics para el dibujo.
         /// </summary>
@@ -49,11 +44,9 @@ namespace Wall_E
             _graphics = Graphics.FromImage(_bitmap);             // Obtiene el objeto Graphics para dibujar
             _canvas.Image = _bitmap;                             // Asigna el bitmap al PictureBox
         }
-
         #endregion
 
         #region Public Methods
-
         /// <summary>
         /// Establece el tamaño de cada píxel (cuadrícula).
         /// </summary>
@@ -85,7 +78,6 @@ namespace Wall_E
             _graphics.Clear(Color.White); // Limpia el bitmap a blanco
             _canvas.Invalidate();         // Solicita el repintado del PictureBox
         }
-
         #endregion
     }
 

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Globalization;
-using Wall_E;
 
 namespace Wall_E
 {

@@ -2,16 +2,28 @@ using System;
 
 namespace Wall_E
 {
+    #region LabelCommandClass
+
     /// <summary>
-    /// Representa una etiqueta en el código (como un marcador de posición).
+    /// Representa una etiqueta en el código (como un marcador de posición para saltos).
     /// </summary>
     public class LabelCommand : ICode
     {
-        // Nombre de la etiqueta
+        #region Properties
+
+        /// <summary>
+        /// Nombre de la etiqueta.
+        /// </summary>
         public string Name { get; set; } = string.Empty;
 
-        // Línea en la que aparece esta etiqueta
+        /// <summary>
+        /// Línea en la que aparece esta etiqueta.
+        /// </summary>
         public int Line { get; set; }
+
+        #endregion
+
+        #region Execution
 
         /// <summary>
         /// Ejecuta la etiqueta. No hace nada, ya que las etiquetas son utilizadas como puntos de salto.
@@ -22,5 +34,9 @@ namespace Wall_E
             // Las etiquetas no hacen nada durante la ejecución,
             // simplemente marcan una posición en el código para saltos Goto.
         }
+
+        #endregion
     }
+
+    #endregion
 }

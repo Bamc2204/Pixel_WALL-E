@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 #nullable enable
 
-
 namespace Wall_E
 {
     #region ParserClass
@@ -92,8 +91,6 @@ namespace Wall_E
                     Console.WriteLine($"[Line {token.Line}] Unrecognized command: {token.Lexeme}");
                     return null;
             }
-
-
         }
 
         #endregion
@@ -181,7 +178,6 @@ namespace Wall_E
                 Line = line
             };
         }
-
 
         #endregion
 

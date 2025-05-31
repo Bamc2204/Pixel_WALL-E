@@ -23,8 +23,10 @@ public class AssignmentCommand : ICode
     /// </summary>
     public Expr Expression { get; set; }
 
+    /// <summary>
+    /// Línea del código donde se encuentra la asignación.
+    /// </summary>
     public int Line { get; set; }
-
 
     #endregion
 
@@ -58,13 +60,21 @@ public class AssignmentCommand : ICode
         };
     }
 
+    #endregion
+
+    #region Execution
+
+    /// <summary>
+    /// Ejecuta el comando de asignación usando el executor.
+    /// Evalúa la expresión y asigna el resultado a la variable correspondiente.
+    /// </summary>
+    /// <param name="executor">Executor que gestiona el estado y ejecución.</param>
     public void Execute(Executor executor)
     {
         int value = executor.EvaluateExpression(Expression);
         executor.AssignVariable(VariableName, value, Line);
         Console.WriteLine($"[Line {Line}] {VariableName} = {value}");
     }
-
 
     #endregion
 }

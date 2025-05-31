@@ -13,7 +13,9 @@ namespace Wall_E
     /// </summary>
     public abstract class Expr
     {
-        // Línea del código fuente donde aparece la expresión (útil para errores)
+        /// <summary>
+        /// Línea del código fuente donde aparece la expresión (útil para errores).
+        /// </summary>
         public int Line { get; set; }
     }
 

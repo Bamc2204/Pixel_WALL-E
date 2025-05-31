@@ -1,25 +1,24 @@
 using System.Windows.Forms;
 using System.Drawing;
 
+#region Class Definition
 /// <summary>
 /// Panel personalizado que contiene un TextBox para mostrar mensajes de error.
 /// </summary>
 public class CanvasErrorPanel : Panel
 {
     #region Fields
-
     // TextBox interno utilizado para mostrar los mensajes de error
     private TextBox errorBox;
-
     #endregion
 
     #region Constructor
-
     /// <summary>
     /// Inicializa el panel y configura el TextBox para mostrar errores.
     /// </summary>
     public CanvasErrorPanel()
     {
+        // Inicializa el TextBox para mostrar errores
         errorBox = new TextBox
         {
             Multiline = true,           // Permite mostrar varias líneas de error
@@ -31,11 +30,9 @@ public class CanvasErrorPanel : Panel
         };
         Controls.Add(errorBox);         // Agrega el TextBox al panel
     }
-
     #endregion
 
     #region Public Methods
-
     /// <summary>
     /// Muestra un mensaje de error en el TextBox.
     /// </summary>
@@ -52,6 +49,6 @@ public class CanvasErrorPanel : Panel
     {
         errorBox.Clear();
     }
-
     #endregion
 }
+#endregion

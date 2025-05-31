@@ -11,32 +11,27 @@ namespace Wall_E
     public class MainForm : Form
     {
         #region Fields
-
-        // TextBox for code editing
+        // TextBox para editar el código fuente
         private TextBox codeEditor;
-        // Custom control for pixel drawing
+        // Control personalizado para dibujar píxeles
         private PixelCanvas pixelCanvas;
-        // TextBox to display errors
+        // TextBox para mostrar mensajes de error
         private TextBox errorBox;
-        // Button to run the code
+        // Botón para ejecutar el código
         private Button runButton;
-
         #endregion
 
         #region Constructor
-
         /// <summary>
-        /// Initializes the main form.
+        /// Inicializa la ventana principal.
         /// </summary>
         public MainForm()
         {
             InitializeComponent();
         }
-
         #endregion
 
         #region UI Setup
-
         /// <summary>
         /// Configura todos los controles y el layout de la ventana principal.
         /// </summary>
@@ -113,11 +108,9 @@ namespace Wall_E
             // Asocia el evento click del botón al método de ejecución
             runButton.Click += RunCode_Click;
         }
-
         #endregion
 
         #region Run Button Logic
-
         /// <summary>
         /// Evento que se dispara al pulsar el botón de ejecutar.
         /// Realiza el proceso de análisis léxico, sintáctico y ejecución del código.
@@ -154,7 +147,6 @@ namespace Wall_E
                 errorBox.Text = $"[Internal Error] {ex.Message}";
             }
         }
-
         #endregion
     }
 }

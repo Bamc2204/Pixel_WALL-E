@@ -1,20 +1,18 @@
 using System.Windows.Forms;
 using System.Drawing;
 
+#region Class Definition
 /// <summary>
 /// Panel personalizado que contiene un editor de código basado en TextBox.
 /// </summary>
 public class CodeEditorPanel : Panel
 {
     #region Fields
-
     // TextBox interno que actúa como editor de código
     private TextBox codeTextBox;
-
     #endregion
 
     #region Constructor
-
     /// <summary>
     /// Inicializa el panel y configura el TextBox para edición de código.
     /// </summary>
@@ -30,11 +28,9 @@ public class CodeEditorPanel : Panel
         };
         Controls.Add(codeTextBox);      // Agrega el TextBox al panel
     }
-
     #endregion
 
     #region Public Methods
-
     /// <summary>
     /// Obtiene el código actual del editor.
     /// </summary>
@@ -44,6 +40,6 @@ public class CodeEditorPanel : Panel
     /// Establece el texto del editor de código.
     /// </summary>
     public void SetCode(string code) => codeTextBox.Text = code;
-
     #endregion
 }
+#endregion

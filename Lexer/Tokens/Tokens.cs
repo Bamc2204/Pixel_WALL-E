@@ -35,6 +35,9 @@ namespace Wall_E
         /// <summary>
         /// Inicializa el token con su tipo, texto y línea.
         /// </summary>
+        /// <param name="type">Tipo de token (TokenType).</param>
+        /// <param name="lexeme">Texto exacto del código fuente.</param>
+        /// <param name="line">Número de línea donde se encontró el token.</param>
         public Token(TokenType type, string lexeme, int line)
         {
             Type = type;
@@ -49,6 +52,7 @@ namespace Wall_E
         /// <summary>
         /// Devuelve una representación legible del token, útil para depuración.
         /// </summary>
+        /// <returns>Cadena con el tipo, texto y línea del token.</returns>
         public override string ToString()
         {
             return $"{Type} \"{Lexeme}\" (línea {Line})";

@@ -1,8 +1,6 @@
-using System;
-
 namespace Wall_E
 {
-    #region FillCommand
+    #region FillCommandClass
 
     /// <summary>
     /// Comando que rellena completamente el canvas con el color del pincel.
@@ -10,6 +8,7 @@ namespace Wall_E
     /// </summary>
     public class FillCommand : GraphicCommand
     {
+        #region ExecuteMethod
         /// <summary>
         /// Ejecuta el comando de llenado.
         /// </summary>
@@ -20,9 +19,10 @@ namespace Wall_E
             if (Arguments.Count != 0)
                 throw new InvalidFunctionArityError("Fill", 0, Arguments.Count, Line);
 
-            // Llama al método del canvas que rellena toda la superficie con el color actual
+            // Llama al método del canvas que rellena toda la superficie con el color actual del pincel
             executor.Canvas.Fill(executor.BrushColor);
         }
+        #endregion
     }
 
     #endregion

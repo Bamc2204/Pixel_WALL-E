@@ -23,6 +23,7 @@ namespace Wall_E
         /// <summary>
         /// Permite establecer el código fuente desde fuera de la clase (por ejemplo, desde una interfaz gráfica).
         /// </summary>
+        /// <param name="code">Nuevo código fuente a almacenar.</param>
         public void SetSourceCode(string code)
         {
             _sourceCode = code;
@@ -31,6 +32,7 @@ namespace Wall_E
         /// <summary>
         /// Permite obtener el código fuente almacenado actualmente.
         /// </summary>
+        /// <returns>El código fuente actual.</returns>
         public string GetSourceCode()
         {
             return _sourceCode;
@@ -44,6 +46,7 @@ namespace Wall_E
         /// Analiza el código fuente almacenado usando el Lexer.
         /// Devuelve una lista de tokens generados a partir del código fuente.
         /// </summary>
+        /// <returns>Lista de tokens generados por el Lexer.</returns>
         public List<Token> AnalyzeSourceCode()
         {
             // Crea una instancia del Lexer, pasándole el código fuente
