@@ -11,7 +11,11 @@ namespace Wall_E
     /// Clase base abstracta para cualquier tipo de expresión (literal, variable, operación, función...).
     /// Todas las expresiones del parser deben heredar de esta clase.
     /// </summary>
-    public abstract class Expr { }
+    public abstract class Expr
+    {
+        // Línea del código fuente donde aparece la expresión (útil para errores)
+        public int Line { get; set; }
+    }
 
     #endregion
 

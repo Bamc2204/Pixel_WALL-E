@@ -89,15 +89,29 @@ namespace Wall_E
                 default:
                     if (code is GraphicCommand gc)
                     {
-                        // Ejecuta comandos gráficos mostrando su nombre y argumentos evaluados
+                        // Obtiene el nombre del comando gráfico (sin "Command")
                         string cmdName = code.GetType().Name.Replace("Command", "");
-                        string argsStr = string.Join(", ", gc.Arguments.ConvertAll(EvaluateExpression));
+
+                        // Lista para almacenar los argumentos convertidos a string
+                        List<string> evaluatedArgs = new();
+
+                        foreach (var arg in gc.Arguments)
+                        {
+                            if (arg is LiteralExpr l && l.Value.StartsWith("\""))
+                            {
+                                // Si es una cadena literal (ej: "Green"), quitar comillas
+                                evaluatedArgs.Add(l.Value.Trim('"'));
+                            }
+                            else
+                            {
+                                // De lo contrario, evaluar la expresión numéricamente
+                                int result = EvaluateExpression(arg);
+                                evaluatedArgs.Add(result.ToString());
+                            }
+                        }
+
+                        string argsStr = string.Join(", ", evaluatedArgs);
                         Console.WriteLine($"[Line {code.Line}] {cmdName}({argsStr})");
-                    }
-                    else
-                    {
-                        // Si el comando no está implementado, muestra un mensaje
-                        Console.WriteLine($"[Line {code.Line}] Command not implemented.");
                     }
                     break;
             }
@@ -118,17 +132,21 @@ namespace Wall_E
             switch (expr)
             {
                 case LiteralExpr l:
-                    // Devuelve el valor literal como entero
-                    return int.Parse(l.Value);
+                    // SOLO evalúalo como número si el comando realmente espera un número
+                    if (int.TryParse(l.Value, out int num))
+                        return num;
+
+                    // Si es una cadena, lanza error personalizado solo si el contexto lo requiere
+                    throw new InvalidLiteralError(l.Value, l.Line);
 
                 case VariableExpr v:
-                    // Devuelve el valor de la variable si existe
+                    // Busca el valor de la variable en el diccionario
                     if (_variables.TryGetValue(v.Name, out int val))
                         return val;
-                    throw new Exception($"Undefined variable: {v.Name}");
+                    throw new UndefinedVariableError(v.Name, v.Line);
 
                 case BinaryExpr b:
-                    // Evalúa la operación binaria según el operador
+                    // Evalúa ambos lados y aplica el operador
                     int left = EvaluateExpression(b.Left);
                     int right = EvaluateExpression(b.Right);
                     return b.Operator switch
@@ -136,14 +154,14 @@ namespace Wall_E
                         "+" => left + right,
                         "-" => left - right,
                         "*" => left * right,
-                        "/" => right != 0 ? left / right : throw new DivideByZeroException(),
-                        "%" => left % right,
+                        "/" => right != 0 ? left / right : throw new DivisionByZeroError(b.Line),
+                        "%" => right != 0 ? left % right : throw new DivisionByZeroError(b.Line),
                         "**" => (int)Math.Pow(left, right),
-                        _ => throw new Exception($"Unknown operator: {b.Operator}")
+                        _ => throw new UnknownOperatorError(b.Operator, b.Line)
                     };
 
                 case FunctionCallExpr f:
-                    // Llama a funciones internas simuladas
+                    // Llama a la función interna correspondiente
                     return f.FunctionName switch
                     {
                         "GetActualX" => 10,
@@ -153,11 +171,11 @@ namespace Wall_E
                         "IsBrushColor" => EvaluateIsBrushColor(f),
                         "IsBrushSize" => EvaluateIsBrushSize(f),
                         "IsCanvasColor" => EvaluateIsCanvasColor(f),
-                        _ => throw new Exception($"Function not implemented: {f.FunctionName}")
+                        _ => throw new FunctionNotImplementedError(f.FunctionName, f.Line)
                     };
 
                 default:
-                    throw new Exception("Unknown expression");
+                    throw new RuntimeError("Unknown expression type", expr.Line);
             }
         }
 
@@ -171,16 +189,14 @@ namespace Wall_E
         private int EvaluateIsBrushColor(FunctionCallExpr f)
         {
             if (f.Arguments.Count != 1)
-                throw new Exception("IsBrushColor requires 1 argument");
+                throw new InvalidFunctionArityError("IsBrushColor", 1, f.Arguments.Count, f.Line);
 
             Expr arg = f.Arguments[0];
-            if (arg is LiteralExpr literal && literal.Value.StartsWith("\""))
-            {
-                string color = literal.Value.Trim('"').ToLower();
-                return color == "blue" ? 1 : 0;
-            }
+            if (arg is not LiteralExpr literal)
+                throw new InvalidArgumentError("IsBrushColor", "Expected a string literal", f.Line);
 
-            throw new Exception("Invalid argument in IsBrushColor");
+            string color = literal.Value.Trim('"').ToLower();
+            return color == "blue" ? 1 : 0;
         }
 
         /// <summary>
