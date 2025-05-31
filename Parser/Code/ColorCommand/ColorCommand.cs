@@ -1,35 +1,36 @@
-using System.Collections.Generic;
+using System;
+using System.Drawing;
 
 namespace Wall_E
 {
-    #region ColorCommand
-
     /// <summary>
-    /// Representa el comando Color, encargado de almacenar los argumentos necesarios para definir un color.
-    /// Hereda de la clase base GraphicCommand.
+    /// Cambia el color del pincel a uno especificado por nombre.
     /// </summary>
     public class ColorCommand : GraphicCommand
     {
-        #region Properties
+        public override void Execute(Executor executor)
+        {
+            // Validamos la cantidad de argumentos esperada
+            if (Arguments.Count != 1)
+                throw new InvalidFunctionArityError("Color", 1, Arguments.Count, Line);
 
-        /// <summary>
-        /// Lista de argumentos para el comando Color.
-        /// Cada argumento es una expresión que representa un valor necesario para definir el color.
-        /// </summary>
-        public List<Expr> Arguments { get; set; } = new();
+            Expr expr = Arguments[0];
 
-        #endregion
+            // Verificamos que el argumento sea una cadena literal
+            if (expr is not LiteralExpr literal || !literal.Value.StartsWith("\""))
+                throw new InvalidArgumentError("El argumento de Color debe ser una cadena entre comillas", Line);
 
-        #region Methods
+            string colorName = literal.Value.Trim('"');
 
-        /// <summary>
-        /// Devuelve una representación en texto del comando Color, incluyendo sus argumentos y la línea donde se encuentra.
-        /// </summary>
-        public override string ToString() =>
-            $"Color({string.Join(", ", Arguments)}) [line {Line}]";
-
-        #endregion
+            try
+            {
+                // Intentamos convertir el nombre a un color real
+                executor.Canvas.SetColor(Color.FromName(colorName));
+            }
+            catch
+            {
+                throw new InvalidArgumentError($"Color no válido: {colorName}", Line);
+            }
+        }
     }
-
-    #endregion
 }

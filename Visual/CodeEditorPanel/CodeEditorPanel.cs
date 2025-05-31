@@ -1,23 +1,49 @@
 using System.Windows.Forms;
 using System.Drawing;
+
+/// <summary>
+/// Panel personalizado que contiene un editor de código basado en TextBox.
+/// </summary>
 public class CodeEditorPanel : Panel
 {
-    private TextBox _textBox;
+    #region Fields
 
+    // TextBox interno que actúa como editor de código
+    private TextBox codeTextBox;
+
+    #endregion
+
+    #region Constructor
+
+    /// <summary>
+    /// Inicializa el panel y configura el TextBox para edición de código.
+    /// </summary>
     public CodeEditorPanel()
     {
-        _textBox = new TextBox
+        codeTextBox = new TextBox
         {
-            Multiline = true,
-            Dock = DockStyle.Fill,
-            ScrollBars = ScrollBars.Both,
-            Font = new Font("Consolas", 10),
-            AcceptsTab = true
+            Multiline = true,           // Permite varias líneas de código
+            Dock = DockStyle.Fill,      // Ocupa todo el panel
+            ScrollBars = ScrollBars.Both, // Barras de desplazamiento horizontal y vertical
+            Font = new Font("Consolas", 10), // Fuente monoespaciada para código
+            AcceptsTab = true           // Permite tabulaciones dentro del editor
         };
-        Controls.Add(_textBox);
+        Controls.Add(codeTextBox);      // Agrega el TextBox al panel
     }
 
-    public string GetCode() => _textBox.Text;
+    #endregion
 
-    public void SetCode(string code) => _textBox.Text = code;
+    #region Public Methods
+
+    /// <summary>
+    /// Obtiene el código actual del editor.
+    /// </summary>
+    public string GetCode() => codeTextBox.Text;
+
+    /// <summary>
+    /// Establece el texto del editor de código.
+    /// </summary>
+    public void SetCode(string code) => codeTextBox.Text = code;
+
+    #endregion
 }

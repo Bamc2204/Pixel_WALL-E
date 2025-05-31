@@ -2,37 +2,53 @@ using System;
 
 namespace Wall_E
 {
-    #region GotoCommand
-
     /// <summary>
-    /// Representa un comando de salto condicional (Goto) en el código.
-    /// Permite saltar a una etiqueta específica si se cumple una condición.
+    /// Representa un comando de salto condicional hacia una etiqueta.
+    /// Sintaxis: Goto[etiqueta](condición)
     /// </summary>
-    public class GotoCommand : Code
+    public class GotoCommand : ICode
     {
-        #region Properties
+        /// <summary>
+        /// Nombre de la etiqueta de destino.
+        /// </summary>
+        public string TargetLabel { get; set; }
 
         /// <summary>
-        /// Nombre de la etiqueta de destino a la que se realizará el salto.
+        /// Condición como string (por ejemplo: "x >= 3").
         /// </summary>
-        public string TargetLabel { get; set; } = "";
+        public string ConditionText { get; set; }
 
         /// <summary>
-        /// Texto de la condición que debe cumplirse para ejecutar el salto.
+        /// Línea en la que se encuentra el comando en el código fuente.
         /// </summary>
-        public string ConditionText { get; set; } = "";
-
-        #endregion
-
-        #region RepresentationMethods
+        public int Line { get; set; }
 
         /// <summary>
-        /// Devuelve una representación en texto del comando Goto, mostrando la etiqueta de destino, la condición y la línea.
+        /// Evalúa la condición y determina si se debe hacer el salto.
         /// </summary>
-        public override string ToString() => $"Goto [{TargetLabel}] ({ConditionText}) [line {Line}]";
+        public bool ShouldJump(Executor executor)
+        {
+            try
+            {
+                return executor.EvaluateConditionText(ConditionText, Line) != 0;
+            }
+            catch (RuntimeError e)
+            {
+                throw new InvalidCommandError("Goto", e.Message, Line);
+            }
+        }
 
-        #endregion
+        /// <summary>
+        /// Ejecuta el comando (en realidad se gestiona desde Executor, así que esto no hace nada).
+        /// </summary>
+        public void Execute(Executor executor)
+        {
+            // La lógica real del salto está en Executor, aquí no se hace nada.
+        }
+
+        public override string ToString()
+        {
+            return $"Goto [{TargetLabel}] ({ConditionText}) [línea {Line}]";
+        }
     }
-
-    #endregion
 }

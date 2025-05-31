@@ -1,39 +1,30 @@
+using System;
+
 namespace Wall_E
 {
-    #region SpawnCommand
-
     /// <summary>
-    /// Clase que representa el comando Spawn, utilizada para almacenar las coordenadas donde se debe crear un objeto.
-    /// Hereda de la clase base GraphicCommand.
+    /// Comando que representa Spawn(x, y), posiciona el origen en el canvas.
     /// </summary>
-    public class SpawnCommand : GraphicCommand
+    public class SpawnCommand : GraphicCommand, ICode
     {
-        #region Properties
+        // Número de línea donde se declaró el comando
+        public new int Line { get; set; }
 
         /// <summary>
-        /// Coordenada X donde se va a hacer el "spawn".
+        /// Ejecuta el comando Spawn sobre el canvas visual.
         /// </summary>
-        public int X { get; set; }
-
-        /// <summary>
-        /// Coordenada Y donde se va a hacer el "spawn".
-        /// </summary>
-        public int Y { get; set; }
-
-        #endregion
-
-        #region RepresentationMethods
-
-        /// <summary>
-        /// Devuelve una cadena con el formato del comando y la línea donde se encontró.
-        /// </summary>
-        public override string ToString()
+        /// <param name="executor">Contexto de ejecución que contiene el canvas y estado.</param>
+        public override void Execute(Executor executor)
         {
-            return $"Spawn({X}, {Y}) [línea {Line}]";
+            // Verifica que haya exactamente 2 argumentos: X e Y
+            if (Arguments.Count != 2)
+                throw new InvalidFunctionArityError("Spawn", 2, Arguments.Count, Line);
+
+            int x = executor.EvaluateExpression(Arguments[0]);
+            int y = executor.EvaluateExpression(Arguments[1]);
+
+            executor.Canvas.Spawn(x, y, executor.BrushColor, executor.BrushSize);
+
         }
-
-        #endregion
     }
-
-    #endregion
 }

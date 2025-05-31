@@ -4,93 +4,173 @@ using System.Windows.Forms;
 
 namespace Wall_E
 {
-    /// <summary>
-    /// Panel personalizado para dibujar una cuadrícula de píxeles.
-    /// </summary>
     public class PixelCanvas : Panel
     {
         #region Fields
 
-        // Tamaño de cada "pixel" en la cuadrícula
         private const int PixelSize = 20;
-        // Ancho de la cuadrícula en cantidad de píxeles
-        private const int GridWidth = 32;
-        // Alto de la cuadrícula en cantidad de píxeles
-        private const int GridHeight = 32;
+        private readonly int[,] _pixels;
+        private readonly int _cols;
+        private readonly int _rows;
 
-        // Matriz que almacena el color de cada "pixel"
-        private Color[,] pixels = new Color[GridWidth, GridHeight];
+        private int _brushSize = 1;
+        private Color _brushColor = Color.Black;
 
         #endregion
 
         #region Constructor
 
-        /// <summary>
-        /// Inicializa el canvas, activa el doble buffer y lo deja en blanco.
-        /// </summary>
-        public PixelCanvas()
+        public PixelCanvas(int cols = 32, int rows = 32)
         {
-            DoubleBuffered = true; // Evita parpadeos al dibujar
-            Width = GridWidth * PixelSize;
-            Height = GridHeight * PixelSize;
+            _cols = cols;
+            _rows = rows;
+            _pixels = new int[cols, rows];
 
-            Clear(); // Inicializa todos los píxeles en blanco
+            this.Width = cols * PixelSize;
+            this.Height = rows * PixelSize;
+            this.DoubleBuffered = true;
+            this.BackColor = Color.White;
         }
 
         #endregion
 
-        #region Public Methods
+        #region Properties
 
-        /// <summary>
-        /// Dibuja un pixel en la posición (x, y) con el color indicado.
-        /// </summary>
-        /// <param name="x">Coordenada X del pixel</param>
-        /// <param name="y">Coordenada Y del pixel</param>
-        /// <param name="color">Color a aplicar</param>
-        public void DrawPixel(int x, int y, Color color)
+        public void SetColor(Color color) => _brushColor = color;
+        public Color GetCurrentColor() => _brushColor;
+        public void SetBrushColor(Color color) => _brushColor = color;
+        public void SetBrushSize(int size) => _brushSize = size;
+
+        #endregion
+
+        #region Drawing Methods
+
+        public void DrawLine(int dx, int dy, int distance)
         {
-            // Verifica que la posición esté dentro de la cuadrícula
-            if (x >= 0 && x < GridWidth && y >= 0 && y < GridHeight)
+            int x = _cols / 2;
+            int y = _rows / 2;
+
+            for (int i = 0; i < distance; i++)
             {
-                pixels[x, y] = color; // Asigna el color
-                Invalidate(); // Solicita repintar el control
+                DrawPoint(x, y);
+                x += dx;
+                y += dy;
+            }
+
+            Invalidate();
+        }
+
+        public void DrawCircle(int radius, Color brushColor, int brushSize)
+        {
+            int cx = _cols / 2;
+            int cy = _rows / 2;
+
+            for (int angle = 0; angle < 360; angle++)
+            {
+                double rad = angle * Math.PI / 180;
+                int x = cx + (int)(radius * Math.Cos(rad));
+                int y = cy + (int)(radius * Math.Sin(rad));
+                DrawPoint(x, y, brushColor, brushSize);
+            }
+
+            Invalidate();
+        }
+
+        public void DrawRectangle(int width, int height, Color color, int size)
+        {
+            int cx = _cols / 2;
+            int cy = _rows / 2;
+
+            for (int dx = 0; dx < width; dx++)
+            {
+                DrawPoint(cx + dx, cy, color, size); // Línea superior
+                DrawPoint(cx + dx, cy + height - 1, color, size); // Línea inferior
+            }
+
+            for (int dy = 0; dy < height; dy++)
+            {
+                DrawPoint(cx, cy + dy, color, size); // Línea izquierda
+                DrawPoint(cx + width - 1, cy + dy, color, size); // Línea derecha
+            }
+
+            Invalidate();
+        }
+
+
+        public void Fill(Color color)
+        {
+            for (int x = 0; x < _cols; x++)
+            {
+                for (int y = 0; y < _rows; y++)
+                {
+                    _pixels[x, y] = color.ToArgb();
+                }
+            }
+
+            this.Invalidate(); // Redibuja el canvas con el nuevo color
+        }
+
+
+        #endregion
+
+        #region Utility Methods
+
+        private void DrawPoint(int cx, int cy)
+        {
+            DrawPoint(cx, cy, _brushColor, _brushSize);
+        }
+
+        private void DrawPoint(int cx, int cy, Color color, int size)
+        {
+            for (int dx = -size / 2; dx <= size / 2; dx++)
+            {
+                for (int dy = -size / 2; dy <= size / 2; dy++)
+                {
+                    int x = cx + dx;
+                    int y = cy + dy;
+
+                    if (x >= 0 && x < _cols && y >= 0 && y < _rows)
+                        _pixels[x, y] = color.ToArgb();
+                }
             }
         }
 
-        /// <summary>
-        /// Limpia el canvas, poniendo todos los píxeles en blanco.
-        /// </summary>
         public void Clear()
         {
-            for (int x = 0; x < GridWidth; x++)
-                for (int y = 0; y < GridHeight; y++)
-                    pixels[x, y] = Color.White;
+            for (int x = 0; x < _cols; x++)
+                for (int y = 0; y < _rows; y++)
+                    _pixels[x, y] = Color.White.ToArgb();
 
-            Invalidate(); // Fuerza el repintado del canvas
+            Invalidate();
         }
+
+        public bool IsInBounds(int x, int y)
+        {
+            return x >= 0 && x < _cols && y >= 0 && y < _rows;
+        }
+
+        public void Spawn(int x, int y, Color color, int size)
+        {
+            DrawPoint(x, y, color, size);
+        }
+
 
         #endregion
 
         #region Paint
 
-        /// <summary>
-        /// Dibuja la cuadrícula de píxeles y las líneas de la cuadrícula.
-        /// </summary>
-        /// <param name="e">Argumentos del evento de pintado</param>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
             Graphics g = e.Graphics;
 
-            // Recorre toda la cuadrícula y dibuja cada pixel
-            for (int x = 0; x < GridWidth; x++)
+            for (int x = 0; x < _cols; x++)
             {
-                for (int y = 0; y < GridHeight; y++)
+                for (int y = 0; y < _rows; y++)
                 {
-                    // Dibuja el rectángulo del pixel con su color
-                    using Brush brush = new SolidBrush(pixels[x, y]);
+                    Color color = Color.FromArgb(_pixels[x, y]);
+                    using Brush brush = new SolidBrush(color);
                     g.FillRectangle(brush, x * PixelSize, y * PixelSize, PixelSize, PixelSize);
-                    // Dibuja el borde del pixel
                     g.DrawRectangle(Pens.Gray, x * PixelSize, y * PixelSize, PixelSize, PixelSize);
                 }
             }

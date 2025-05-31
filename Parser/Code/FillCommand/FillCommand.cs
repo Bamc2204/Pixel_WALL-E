@@ -1,27 +1,28 @@
-using System.Collections.Generic;
+using System;
 
 namespace Wall_E
 {
     #region FillCommand
 
     /// <summary>
-    /// Comando que representa la instrucción Fill().
-    /// Rellena la región actual cerrada con el color del pincel.
-    /// Este comando no tiene argumentos.
+    /// Comando que rellena completamente el canvas con el color del pincel.
+    /// Sintaxis: Fill()
     /// </summary>
     public class FillCommand : GraphicCommand
     {
-        #region Constructors
-
         /// <summary>
-        /// Constructor que asegura que la lista de argumentos está vacía.
+        /// Ejecuta el comando de llenado.
         /// </summary>
-        public FillCommand()
+        /// <param name="executor">Ejecutor que contiene el canvas y estado actual.</param>
+        public override void Execute(Executor executor)
         {
-            Arguments = new List<Expr>();
-        }
+            // Verifica que no se pasen argumentos al comando Fill()
+            if (Arguments.Count != 0)
+                throw new InvalidFunctionArityError("Fill", 0, Arguments.Count, Line);
 
-        #endregion
+            // Llama al método del canvas que rellena toda la superficie con el color actual
+            executor.Canvas.Fill(executor.BrushColor);
+        }
     }
 
     #endregion

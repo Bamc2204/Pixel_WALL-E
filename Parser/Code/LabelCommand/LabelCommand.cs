@@ -2,39 +2,25 @@ using System;
 
 namespace Wall_E
 {
-    #region LabelCommand
-
     /// <summary>
-    /// Representa una etiqueta en el código, como 'loop-1'.
-    /// Las etiquetas permiten marcar posiciones para saltos (Goto) u organización del flujo.
+    /// Representa una etiqueta en el código (como un marcador de posición).
     /// </summary>
-    public class LabelCommand : Code
+    public class LabelCommand : ICode
     {
-        #region Properties
+        // Nombre de la etiqueta
+        public string Name { get; set; } = string.Empty;
+
+        // Línea en la que aparece esta etiqueta
+        public int Line { get; set; }
 
         /// <summary>
-        /// Nombre de la etiqueta definida.
-        /// Por ejemplo: 'inicio', 'loop-1', etc.
-        /// Esta propiedad almacena el identificador de la etiqueta que se usará para referencias en saltos o control de flujo.
+        /// Ejecuta la etiqueta. No hace nada, ya que las etiquetas son utilizadas como puntos de salto.
         /// </summary>
-        public string Name { get; set; }
-
-        #endregion
-
-        #region RepresentationMethods
-
-        /// <summary>
-        /// Devuelve una representación en texto de la etiqueta.
-        /// Incluye el nombre de la etiqueta y la línea donde está definida.
-        /// </summary>
-        /// <returns>Cadena descriptiva de la etiqueta.</returns>
-        public override string ToString()
+        /// <param name="executor">Contexto de ejecución.</param>
+        public void Execute(Executor executor)
         {
-            return $"Etiqueta: {Name} [línea {Line}]";
+            // Las etiquetas no hacen nada durante la ejecución,
+            // simplemente marcan una posición en el código para saltos Goto.
         }
-
-        #endregion
     }
-
-    #endregion
 }

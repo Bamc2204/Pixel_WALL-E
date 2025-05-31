@@ -8,18 +8,14 @@ namespace Wall_E
     /// Clase base abstracta para comandos gráficos que usan una lista de argumentos.
     /// Hereda de la clase Code.
     /// </summary>
-    public abstract class GraphicCommand : Code
+    public abstract class GraphicCommand : ICode
     {
-        #region Properties
-
-        /// <summary>
-        /// Lista de argumentos para el comando gráfico.
-        /// Cada argumento es una expresión que representa un valor necesario para el comando.
-        /// </summary>
+        public int Line { get; set; }
         public List<Expr> Arguments { get; set; } = new();
 
-        #endregion
+        public abstract void Execute(Executor executor);
     }
+
 
     #endregion
 }

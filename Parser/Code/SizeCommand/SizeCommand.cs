@@ -10,16 +10,6 @@ namespace Wall_E
     /// </summary>
     public class SizeCommand : GraphicCommand
     {
-        #region Properties
-
-        /// <summary>
-        /// Lista de argumentos para el comando Size.
-        /// Cada argumento es una expresión que representa un valor necesario para definir el tamaño.
-        /// </summary>
-        public List<Expr> Arguments { get; set; } = new();
-
-        #endregion
-
         #region Methods
 
         /// <summary>
@@ -28,6 +18,15 @@ namespace Wall_E
         public override string ToString() =>
             $"Size({string.Join(", ", Arguments)}) [line {Line}]";
 
+        public override void Execute(Executor executor)
+        {
+            if (Arguments.Count != 1)
+                throw new InvalidFunctionArityError("Size", 1, Arguments.Count, Line);
+
+            int size = executor.EvaluateExpression(Arguments[0]);
+            executor.Canvas.SetBrushSize(size);
+        }
+        
         #endregion
     }
 

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+#nullable enable
+
 
 namespace Wall_E
 {
@@ -32,9 +34,9 @@ namespace Wall_E
         /// <summary>
         /// Método principal que recorre todos los tokens y genera la lista de comandos.
         /// </summary>
-        public List<Code> Parse()
+        public List<ICode> Parse()
         {
-            List<Code> codes = new();
+            List<ICode> codes = new();
 
             while (!IsAtEnd())
             {
@@ -46,11 +48,10 @@ namespace Wall_E
                 }
 
                 // Intenta analizar un comando
-                Code cmd = ParseCode();
+                ICode? cmd = ParseCode();
                 if (cmd != null)
-                {
                     codes.Add(cmd);
-                }
+
                 else
                 {
                     // Si no reconoce el comando, avanza al siguiente token
@@ -68,7 +69,7 @@ namespace Wall_E
         /// <summary>
         /// Reconoce el tipo de comando según el token actual y llama al método de análisis correspondiente.
         /// </summary>
-        private Code? ParseCode()
+        private ICode? ParseCode()
         {
             Token token = Peek();
 
@@ -102,7 +103,7 @@ namespace Wall_E
         /// <summary>
         /// Analiza una etiqueta y la convierte en un LabelCommand.
         /// </summary>
-        private Code? ParseLabel()
+        private ICode? ParseLabel()
         {
             Token token = Advance();
             return new LabelCommand
@@ -119,7 +120,7 @@ namespace Wall_E
         /// <summary>
         /// Analiza un comando Goto, extrayendo la etiqueta de destino y la condición.
         /// </summary>
-        private Code? ParseGoto()
+        private ICode? ParseGoto()
         {
             Token token = Advance();
             int line = token.Line;
@@ -163,7 +164,7 @@ namespace Wall_E
         /// <summary>
         /// Analiza una asignación de variable.
         /// </summary>
-        private Code? ParseAssignment()
+        private ICode? ParseAssignment()
         {
             Token id = Advance();
             string variable = id.Lexeme;
@@ -311,7 +312,7 @@ namespace Wall_E
         /// <summary>
         /// Muestra un error de sintaxis y retorna null.
         /// </summary>
-        private Code? Error(string message)
+        private ICode? Error(string message)
         {
             Console.WriteLine($"[Line {Peek().Line}] Syntax error: {message}");
             return null;
@@ -333,7 +334,7 @@ namespace Wall_E
         /// <summary>
         /// Analiza comandos gráficos genéricos que reciben argumentos entre paréntesis.
         /// </summary>
-        private Code ParseGenericFunctionCall<T>() where T : GraphicCommand, new()
+        private ICode ParseGenericFunctionCall<T>() where T : GraphicCommand, new()
         {
             Token t = Advance();
             int line = t.Line;

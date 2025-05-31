@@ -1,3 +1,4 @@
+using System;
 using Wall_E;
 
 #region AssignmentCommand
@@ -6,7 +7,7 @@ using Wall_E;
 /// Representa un comando de asignación de variable en el código fuente.
 /// Ejemplo: x <- 5 + y
 /// </summary>
-public class AssignmentCommand : Code
+public class AssignmentCommand : ICode
 {
     #region Properties
 
@@ -21,6 +22,9 @@ public class AssignmentCommand : Code
     /// Puede ser un valor literal, una operación, una llamada a función, etc.
     /// </summary>
     public Expr Expression { get; set; }
+
+    public int Line { get; set; }
+
 
     #endregion
 
@@ -53,6 +57,14 @@ public class AssignmentCommand : Code
             _ => "?" // Caso desconocido
         };
     }
+
+    public void Execute(Executor executor)
+    {
+        int value = executor.EvaluateExpression(Expression);
+        executor.AssignVariable(VariableName, value, Line);
+        Console.WriteLine($"[Line {Line}] {VariableName} = {value}");
+    }
+
 
     #endregion
 }

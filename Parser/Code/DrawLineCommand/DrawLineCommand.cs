@@ -1,35 +1,21 @@
-using System.Collections.Generic;
+using System.Security.AccessControl;
 
 namespace Wall_E
 {
-    #region DrawLineCommand
-
-    /// <summary>
-    /// Representa el comando DrawLine, encargado de almacenar los argumentos necesarios para dibujar una línea.
-    /// Hereda de la clase base GraphicCommand.
-    /// </summary>
     public class DrawLineCommand : GraphicCommand
     {
-        #region Properties
+        public override void Execute(Executor executor)
+        {
+            // Evaluar los argumentos
+            if (Arguments.Count != 3)
+                throw new InvalidArgumentError("DrawLine requires 3 arguments", Line);
 
-        /// <summary>
-        /// Lista de argumentos para el comando DrawLine.
-        /// Cada argumento es una expresión que representa un valor necesario para definir la línea a dibujar.
-        /// </summary>
-        public List<Expr> Arguments { get; set; } = new();
+            int dx = executor.EvaluateExpression(Arguments[0]);
+            int dy = executor.EvaluateExpression(Arguments[1]);
+            int dist = executor.EvaluateExpression(Arguments[2]);
 
-        #endregion
 
-        #region Methods
-
-        /// <summary>
-        /// Devuelve una representación en texto del comando DrawLine, incluyendo sus argumentos y la línea donde se encuentra.
-        /// </summary>
-        public override string ToString() =>
-            $"DrawLine({string.Join(", ", Arguments)}) [line {Line}]";
-
-        #endregion
+            executor.Canvas.DrawLine(dx, dy, dist);
+        }
     }
-
-    #endregion
 }

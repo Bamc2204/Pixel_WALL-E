@@ -137,10 +137,10 @@ namespace Wall_E
 
                 // 2. Análisis sintáctico: convierte los tokens en instrucciones
                 Parser parser = new Parser(tokens);
-                List<Code> codes = parser.Parse();
+                List<ICode> codes = parser.Parse();
 
                 // 3. Ejecución de las instrucciones
-                Executor executor = new Executor();
+                Executor executor = new Executor(pixelCanvas);
                 executor.Execute(codes);
             }
             catch (RuntimeError ex)
