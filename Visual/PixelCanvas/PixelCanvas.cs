@@ -4,74 +4,67 @@ using System.Windows.Forms;
 
 namespace Wall_E
 {
-    /// <summary>
-    /// Panel personalizado para dibujar píxeles, líneas, círculos y otras figuras.
-    /// </summary>
     public class PixelCanvas : Panel
     {
         #region Fields
-        // Tamaño de cada píxel en pantalla
-        private const int PixelSize = 20;
-        // Matriz que almacena el color de cada píxel
-        private readonly int[,] _pixels;
-        // Número de columnas del canvas
-        private readonly int _cols;
-        // Número de filas del canvas
-        private readonly int _rows;
 
-        // Tamaño actual del pincel
+        private int _pixelSize = 5;
+        private readonly int[,] _pixels;
+        private readonly int _cols;
+        private readonly int _rows;
         private int _brushSize = 1;
-        // Color actual del pincel
         private Color _brushColor = Color.Black;
+
+        private Point _cursorPosition;
+        private bool _showCursor = true;
+        private Timer _cursorTimer;
+
         #endregion
 
         #region Constructor
-        /// <summary>
-        /// Inicializa el canvas con el número de columnas y filas especificado.
-        /// </summary>
-        public PixelCanvas(int cols = 32, int rows = 32)
+
+        public PixelCanvas(int cols = 128, int rows = 128)
         {
             _cols = cols;
             _rows = rows;
             _pixels = new int[cols, rows];
 
-            this.Width = cols * PixelSize;
-            this.Height = rows * PixelSize;
-            this.DoubleBuffered = true;
-            this.BackColor = Color.White;
+            Width = cols * _pixelSize;
+            Height = rows * _pixelSize;
+            DoubleBuffered = true;
+            BackColor = Color.White;
+
+            _cursorPosition = new Point(cols / 2, rows / 2);
+
+            // Timer para cursor intermitente
+            _cursorTimer = new Timer { Interval = 500 };
+            _cursorTimer.Tick += (s, e) =>
+            {
+                _showCursor = !_showCursor;
+                Invalidate();
+            };
+            _cursorTimer.Start();
         }
+
         #endregion
 
         #region Properties
-        /// <summary>
-        /// Establece el color actual del pincel.
-        /// </summary>
+
         public void SetColor(Color color) => _brushColor = color;
-
-        /// <summary>
-        /// Obtiene el color actual del pincel.
-        /// </summary>
         public Color GetCurrentColor() => _brushColor;
-
-        /// <summary>
-        /// Establece el color del pincel.
-        /// </summary>
         public void SetBrushColor(Color color) => _brushColor = color;
-
-        /// <summary>
-        /// Establece el tamaño del pincel.
-        /// </summary>
         public void SetBrushSize(int size) => _brushSize = size;
+        public int Cols => _cols;
+        public int Rows => _rows;
+
         #endregion
 
         #region Drawing Methods
-        /// <summary>
-        /// Dibuja una línea desde el centro del canvas en la dirección y distancia indicadas.
-        /// </summary>
+
         public void DrawLine(int dx, int dy, int distance)
         {
-            int x = _cols / 2;
-            int y = _rows / 2;
+            int x = _cursorPosition.X;
+            int y = _cursorPosition.Y;
 
             for (int i = 0; i < distance; i++)
             {
@@ -80,98 +73,59 @@ namespace Wall_E
                 y += dy;
             }
 
+            _cursorPosition = new Point(x, y);
             Invalidate();
         }
 
-        /// <summary>
-        /// Dibuja un círculo centrado en el canvas.
-        /// </summary>
-        public void DrawCircle(int radius, Color brushColor, int brushSize)
+        public void DrawCircle(int radius, Color color, int size)
         {
-            int cx = _cols / 2;
-            int cy = _rows / 2;
+            int cx = _cursorPosition.X;
+            int cy = _cursorPosition.Y;
 
             for (int angle = 0; angle < 360; angle++)
             {
                 double rad = angle * Math.PI / 180;
                 int x = cx + (int)(radius * Math.Cos(rad));
                 int y = cy + (int)(radius * Math.Sin(rad));
-                DrawPoint(x, y, brushColor, brushSize);
+                DrawPoint(x, y, color, size);
             }
 
             Invalidate();
         }
 
-        /// <summary>
-        /// Dibuja un rectángulo centrado en el canvas.
-        /// </summary>
         public void DrawRectangle(int width, int height, Color color, int size)
         {
-            int cx = _cols / 2;
-            int cy = _rows / 2;
+            int x = _cursorPosition.X;
+            int y = _cursorPosition.Y;
 
-            for (int dx = 0; dx < width; dx++)
+            for (int i = 0; i < width; i++)
             {
-                DrawPoint(cx + dx, cy, color, size); // Línea superior
-                DrawPoint(cx + dx, cy + height - 1, color, size); // Línea inferior
+                DrawPoint(x + i, y, color, size);
+                DrawPoint(x + i, y + height - 1, color, size);
             }
 
-            for (int dy = 0; dy < height; dy++)
+            for (int j = 0; j < height; j++)
             {
-                DrawPoint(cx, cy + dy, color, size); // Línea izquierda
-                DrawPoint(cx + width - 1, cy + dy, color, size); // Línea derecha
+                DrawPoint(x, y + j, color, size);
+                DrawPoint(x + width - 1, y + j, color, size);
             }
 
             Invalidate();
         }
 
-        /// <summary>
-        /// Rellena todo el canvas con el color especificado.
-        /// </summary>
         public void Fill(Color color)
         {
             for (int x = 0; x < _cols; x++)
-            {
                 for (int y = 0; y < _rows; y++)
-                {
                     _pixels[x, y] = color.ToArgb();
-                }
-            }
 
-            this.Invalidate(); // Redibuja el canvas con el nuevo color
+            Invalidate();
         }
+
         #endregion
 
         #region Utility Methods
-        /// <summary>
-        /// Dibuja un punto en la posición indicada usando el color y tamaño actuales del pincel.
-        /// </summary>
-        private void DrawPoint(int cx, int cy)
-        {
-            DrawPoint(cx, cy, _brushColor, _brushSize);
-        }
 
-        /// <summary>
-        /// Dibuja un punto en la posición indicada con el color y tamaño especificados.
-        /// </summary>
-        private void DrawPoint(int cx, int cy, Color color, int size)
-        {
-            for (int dx = -size / 2; dx <= size / 2; dx++)
-            {
-                for (int dy = -size / 2; dy <= size / 2; dy++)
-                {
-                    int x = cx + dx;
-                    int y = cy + dy;
-
-                    if (x >= 0 && x < _cols && y >= 0 && y < _rows)
-                        _pixels[x, y] = color.ToArgb();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Limpia el canvas y lo deja en blanco.
-        /// </summary>
         public void Clear()
         {
             for (int x = 0; x < _cols; x++)
@@ -181,27 +135,74 @@ namespace Wall_E
             Invalidate();
         }
 
-        /// <summary>
-        /// Verifica si una posición está dentro de los límites del canvas.
-        /// </summary>
         public bool IsInBounds(int x, int y)
         {
             return x >= 0 && x < _cols && y >= 0 && y < _rows;
         }
 
-        /// <summary>
-        /// Dibuja un punto en la posición indicada con el color y tamaño especificados (alias para DrawPoint).
-        /// </summary>
-        public void Spawn(int x, int y, Color color, int size)
+        public void Spawn(int x, int y)
         {
-            DrawPoint(x, y, color, size);
+            if (!IsInBounds(x, y))
+                throw new CanvasOutOfBoundsError(x, y, _cols, _rows, _pixelSize);
+
+            _cursorPosition = new Point(x, y);
+            Invalidate();
         }
+
+        public void ZoomIn()
+        {
+            _pixelSize = Math.Min(_pixelSize + 2, 60);
+            ResizeCanvas();
+        }
+
+        public void ZoomOut()
+        {
+            _pixelSize = Math.Max(_pixelSize - 2, 2);
+            ResizeCanvas();
+        }
+
+        private void ResizeCanvas()
+        {
+            Width = _cols * _pixelSize;
+            Height = _rows * _pixelSize;
+            Invalidate();
+        }
+
+        public void CenterOnCursor(Panel scrollPanel)
+        {
+            int scrollX = _cursorPosition.X * _pixelSize - scrollPanel.ClientSize.Width / 2;
+            int scrollY = _cursorPosition.Y * _pixelSize - scrollPanel.ClientSize.Height / 2;
+
+            scrollPanel.AutoScrollPosition = new Point(scrollX, scrollY);
+        }
+
+
+        private void DrawPoint(int cx, int cy)
+        {
+            DrawPoint(cx, cy, _brushColor, _brushSize);
+        }
+
+        private void DrawPoint(int cx, int cy, Color color, int size)
+        {
+            for (int dx = -size / 2; dx <= size / 2; dx++)
+            {
+                for (int dy = -size / 2; dy <= size / 2; dy++)
+                {
+                    int x = cx + dx;
+                    int y = cy + dy;
+
+                    if (!IsInBounds(x, y))
+                        throw new CanvasOutOfBoundsError(x, y, _cols, _rows, _pixelSize);
+
+                    _pixels[x, y] = color.ToArgb();
+                }
+            }
+        }
+
         #endregion
 
         #region Paint
-        /// <summary>
-        /// Dibuja el contenido del canvas en pantalla.
-        /// </summary>
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -213,11 +214,20 @@ namespace Wall_E
                 {
                     Color color = Color.FromArgb(_pixels[x, y]);
                     using Brush brush = new SolidBrush(color);
-                    g.FillRectangle(brush, x * PixelSize, y * PixelSize, PixelSize, PixelSize);
-                    g.DrawRectangle(Pens.Gray, x * PixelSize, y * PixelSize, PixelSize, PixelSize);
+                    g.FillRectangle(brush, x * _pixelSize, y * _pixelSize, _pixelSize, _pixelSize);
+                    g.DrawRectangle(Pens.LightGray, x * _pixelSize, y * _pixelSize, _pixelSize, _pixelSize);
                 }
             }
+
+            if (_showCursor)
+            {
+                int cx = _cursorPosition.X * _pixelSize;
+                int cy = _cursorPosition.Y * _pixelSize;
+                using Pen pen = new Pen(Color.Gray, 2);
+                g.DrawRectangle(pen, cx, cy, _pixelSize, _pixelSize);
+            }
         }
+
         #endregion
     }
 }
