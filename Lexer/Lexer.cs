@@ -13,13 +13,13 @@ namespace Wall_E
     {
         #region FieldsAndConstructor
 
-        // Código fuente a analizar
+        // Código fuente a analizar.
         private readonly string _source;
-        // Índice del carácter actual en el código fuente
+        // Índice del carácter actual en el código fuente.
         private int _current = 0;
-        // Número de línea actual (para mensajes de error y tokens)
+        // Número de línea actual (para mensajes de error y tokens).
         private int _line = 1;
-        // Indica si acaba de pasar un salto de línea (para detectar etiquetas)
+        // Indica si acaba de pasar un salto de línea (para detectar etiquetas).
         private bool _newLineJustPassed = true;
 
         /// <summary>
@@ -45,35 +45,35 @@ namespace Wall_E
 
             while (!IsAtEnd())
             {
-                // Si el carácter actual es un espacio en blanco
+                // Si el carácter actual es un espacio en blanco.
                 if (char.IsWhiteSpace(Peek()))
                 {
-                    // Si es salto de línea, aumenta el contador de línea y agrega un token NEWLINE
+                    // Si es salto de línea, aumenta el contador de línea y agrega un token NEWLINE.
                     if (Peek() == '\n')
                     {
                         _line++;
                         _newLineJustPassed = true;
                         tokens.Add(new Token(TokenType.NEWLINE, "\\n", _line));
                     }
-                    Advance(); // Avanza al siguiente carácter
+                    Advance(); // Avanza al siguiente carácter.
                     continue;
                 }
 
-                // Si el carácter es una letra o un guion bajo, puede ser palabra clave, identificador o etiqueta
+                // Si el carácter es una letra o un guion bajo, puede ser palabra clave, identificador o etiqueta.
                 if (char.IsLetter(Peek()) || Peek() == '_')
                 {
-                    // Lee la palabra completa (letras, dígitos o guion bajo)
+                    // Lee la palabra completa (letras, dígitos o guion bajo).
                     string word = ReadWhile(ch => char.IsLetterOrDigit(ch) || ch == '_');
 
-                    // Detectar si es palabra clave primero
+                    // Detectar si es palabra clave primero.
                     Token tokenAux = KeywordOrIdentifier(word);
 
-                    // Si es una palabra clave, siempre la usamos como tal
+                    // Si es una palabra clave, siempre la usamos como tal.
                     if (tokenAux.Type != TokenType.IDENTIFIER)
                     {
                         tokens.Add(tokenAux);
                     }
-                    // Si está al inicio de línea y no tiene asignación, es una etiqueta
+                    // Si está al inicio de línea y no tiene asignación, es una etiqueta.
                     else if (_newLineJustPassed && !IsAssignmentJustAfter())
                     {
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
@@ -87,7 +87,7 @@ namespace Wall_E
                     continue;
                 }
 
-                // Si el carácter es un dígito, lee un número
+                // Si el carácter es un dígito, lee un número.
                 if (char.IsDigit(Peek()))
                 {
                     string number = ReadWhile(char.IsDigit);
@@ -96,32 +96,33 @@ namespace Wall_E
                     continue;
                 }
 
-                // Si el carácter es una comilla, lee una cadena de texto
+                // Si el carácter es una comilla, lee una cadena de texto.
                 if (Peek() == '"')
                 {
-                    Advance(); // consumir la primera comilla
+                    Advance(); // Consumir la primera comilla.
                     string str = ReadString();
                     tokens.Add(new Token(TokenType.STRING, str, _line));
                     _newLineJustPassed = false;
                     continue;
                 }
 
-                // Si es cualquier otro carácter, intenta reconocerlo como símbolo u operador
+                // Ignora comentarios con #.
+                if (Peek() == '#')
+                {
+                    // Avanza hasta el final de la línea o del archivo.
+                    while (!IsAtEnd() && Peek() != '\n')
+                        Advance();
+                    continue; // Sigue al próximo token.
+                }
+
+                // Si es cualquier otro carácter, intenta reconocerlo como símbolo u operador.
                 char c = Advance();
                 Token token = RecognizeSymbolOrOperator(c);
-                if (token != null)
-                {
-                    tokens.Add(token);
-                    _newLineJustPassed = false;
-                }
-                else
-                {
-                    // Si no reconoce el símbolo, lo marca como desconocido
-                    tokens.Add(new Token(TokenType.UNKNOWN, c.ToString(), _line));
-                }
+                tokens.Add(token);
+                _newLineJustPassed = false;
             }
 
-            // Al final, agrega un token de fin de archivo
+            // Al final, agrega un token de fin de archivo.
             tokens.Add(new Token(TokenType.EOF, "", _line));
             return tokens;
         }
@@ -189,7 +190,7 @@ namespace Wall_E
                 if (Peek() == '\n') _line++;
                 sb.Append(Advance());
             }
-            if (!IsAtEnd()) Advance(); // Consume el cierre de comillas
+            if (!IsAtEnd()) Advance(); // Consume el cierre de comillas.
             return sb.ToString();
         }
 
@@ -197,7 +198,7 @@ namespace Wall_E
 
         #region KeywordsAndIdentifiers
 
-        // Diccionario que asocia palabras clave con su tipo de token
+        // Diccionario que asocia palabras clave con su tipo de token.
         private static readonly Dictionary<string, TokenType> Keywords = new()
         {
             { "Spawn", TokenType.SPAWN },
@@ -229,7 +230,7 @@ namespace Wall_E
             {
                 return new Token(type, word, _line);
             }
-            // Si no es palabra clave, es un identificador
+            // Si no es palabra clave, es un identificador.
             return new Token(TokenType.IDENTIFIER, word, _line);
         }
 
@@ -241,7 +242,7 @@ namespace Wall_E
         /// Reconoce operadores y símbolos individuales o compuestos.
         /// </summary>
         /// <param name="c">Carácter a analizar.</param>
-        /// <returns>Token correspondiente o null si no reconoce el símbolo.</returns>
+        /// <returns>Token correspondiente o UNKNOWN si no reconoce el símbolo.</returns>
         private Token RecognizeSymbolOrOperator(char c)
         {
             switch (c)
@@ -269,7 +270,6 @@ namespace Wall_E
                 case '|':
                     if (Match('|')) return new Token(TokenType.OR, "||", _line);
                     break;
-                // Paréntesis, corchetes y coma
                 case '(': return new Token(TokenType.LPAREN, "(", _line);
                 case ')': return new Token(TokenType.RPAREN, ")", _line);
                 case '[': return new Token(TokenType.LBRACKET, "[", _line);
@@ -277,8 +277,8 @@ namespace Wall_E
                 case ',': return new Token(TokenType.COMMA, ",", _line);
             }
 
-            // Si no reconoce el símbolo, devuelve null
-            return null;
+            // Si no reconoce el símbolo, lo marca como UNKNOWN.
+            return new Token(TokenType.UNKNOWN, c.ToString(), _line);
         }
 
         #endregion
@@ -306,14 +306,14 @@ namespace Wall_E
         /// </summary>
         private bool IsAssignmentJustAfter()
         {
-            // Guardamos posición temporal
+            // Guardamos posición temporal.
             int temp = _current;
 
-            // Saltamos espacios en blanco
+            // Saltamos espacios en blanco.
             while (temp < _source.Length && char.IsWhiteSpace(_source[temp]))
                 temp++;
 
-            // Verificamos si hay un "<-"
+            // Verificamos si hay un "<-".
             return temp + 1 < _source.Length &&
                 _source[temp] == '<' &&
                 _source[temp + 1] == '-';

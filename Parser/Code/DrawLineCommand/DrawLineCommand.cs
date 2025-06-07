@@ -1,34 +1,42 @@
-using System.Security.AccessControl;
+using System;
 
 namespace Wall_E
 {
     #region DrawLineCommandClass
 
     /// <summary>
-    /// Comando gráfico que representa la instrucción para dibujar una línea en el canvas.
-    /// Hereda de GraphicCommand y utiliza tres argumentos: dx, dy y distancia.
+    /// Comando que dibuja una línea desde la posición actual del cursor.
+    /// Sintaxis: DrawLine(dx, dy, distance)
     /// </summary>
     public class DrawLineCommand : GraphicCommand
     {
-        #region Execution
+        #region ExecuteMethod
 
-        /// <summary>
-        /// Ejecuta el comando de dibujar línea usando el executor.
-        /// Evalúa los argumentos y llama al método DrawLine del canvas.
-        /// </summary>
-        /// <param name="executor">Executor que gestiona el estado y ejecución.</param>
         public override void Execute(Executor executor)
         {
-            // Verifica que la cantidad de argumentos sea exactamente 3
             if (Arguments.Count != 3)
-                throw new InvalidArgumentError("DrawLine requires 3 arguments", Line);
+                throw new InvalidFunctionArityError("DrawLine", 3, Arguments.Count, Line);
 
-            // Evalúa los argumentos: desplazamiento en X, desplazamiento en Y y distancia
             int dx = executor.EvaluateExpression(Arguments[0]);
             int dy = executor.EvaluateExpression(Arguments[1]);
             int dist = executor.EvaluateExpression(Arguments[2]);
 
-            // Llama al método del canvas para dibujar la línea
+            // Posición inicial del cursor
+            int x = executor.Canvas.CursorX;
+            int y = executor.Canvas.CursorY;
+
+            // Validación: verificar que no se salga del canvas
+            int finalX = x + dx * dist;
+            int finalY = y + dy * dist;
+
+            if (!executor.Canvas.IsInBounds(x, y) || !executor.Canvas.IsInBounds(finalX, finalY))
+            {
+                int cols = executor.Canvas.Cols;
+                int rows = executor.Canvas.Rows;
+                throw new CanvasOutOfBoundsError(finalX, finalY, cols, rows, Line);
+            }
+
+            // Ejecutar el dibujo
             executor.Canvas.DrawLine(dx, dy, dist);
         }
 

@@ -4,47 +4,60 @@ using System.Drawing;
 
 namespace Wall_E
 {
-    /// <summary>
-    /// Clase responsable de ejecutar instrucciones y gestionar el estado del canvas y variables.
-    /// </summary>
     public class Executor
     {
-        #region Fields
+        #region PrivateFields
 
-        // Diccionario para almacenar variables y sus valores
+        // Diccionario para almacenar variables y sus valores.
         private readonly Dictionary<string, int> _variables = new();
-        // Referencia al canvas donde se dibuja
-        public PixelCanvas Canvas { get; }
-        // Color actual del pincel
-        public Color BrushColor { get; private set; } = Color.Black;
-        // Tamaño actual del pincel
-        public int BrushSize { get; private set; } = 1;
+
+        // Referencia al canvas donde se dibuja.
+        private readonly PixelCanvas _canvas;
+
+        #endregion
+
+        #region PublicProperties
+
+        /// <summary>
+        /// Permite acceder al canvas actual.
+        /// </summary>
+        public PixelCanvas Canvas => _canvas;
+
+        /// <summary>
+        /// Permite obtener el color actual del pincel.
+        /// </summary>
+        public Color BrushColor => _canvas.GetCurrentColor();
+
+        /// <summary>
+        /// Permite obtener el tamaño actual del pincel.
+        /// </summary>
+        public int BrushSize => _canvas.GetBrushSize();
 
         #endregion
 
         #region Constructor
 
         /// <summary>
-        /// Inicializa el executor con el canvas de dibujo.
+        /// Inicializa el ejecutor con un canvas dado.
         /// </summary>
-        /// <param name="canvas">Canvas donde se realizarán los dibujos.</param>
+        /// <param name="canvas">Canvas sobre el que se dibuja.</param>
         public Executor(PixelCanvas canvas)
         {
-            Canvas = canvas;
+            _canvas = canvas;
         }
 
         #endregion
 
-        #region Execute Method
+        #region MainExecutionMethod
 
         /// <summary>
-        /// Ejecuta una lista de instrucciones (ICode).
-        /// Gestiona saltos, ejecución y errores.
+        /// Método principal que ejecuta una lista de instrucciones.
         /// </summary>
         /// <param name="codes">Lista de instrucciones a ejecutar.</param>
         public void Execute(List<ICode> codes)
         {
-            var labelMap = BuildLabelMap(codes);
+            // Mapa de etiquetas para saltos.
+            Dictionary<string, int> labels = BuildLabelMap(codes);
 
             for (int i = 0; i < codes.Count; i++)
             {
@@ -52,238 +65,108 @@ namespace Wall_E
 
                 try
                 {
-                    // Si es un comando Goto, evalúa si debe saltar
+                    // Si es un comando de salto (goto)
                     if (code is GotoCommand gotoCmd)
                     {
-                        if (gotoCmd.ShouldJump(this))
+                        int cond = EvaluateConditionText(gotoCmd.ConditionText, code.Line);
+                        if (cond != 0)
                         {
-                            if (labelMap.TryGetValue(gotoCmd.TargetLabel, out int index))
-                            {
-                                i = index - 1; // Salta a la etiqueta
-                                continue;
-                            }
-                            else
-                            {
+                            if (!labels.TryGetValue(gotoCmd.TargetLabel, out int dest))
                                 throw new LabelNotFoundError(gotoCmd.TargetLabel, code.Line);
-                            }
+
+                            i = dest - 1; // Saltar a la etiqueta
+                            continue;
                         }
                     }
                     else
                     {
-                        // Ejecuta el comando normalmente
+                        // Ejecutar instrucción normal
                         code.Execute(this);
                     }
                 }
-                catch (RuntimeError e)
+                catch (RuntimeError ex)
                 {
-                    // Muestra errores personalizados de ejecución
-                    Console.WriteLine($"Error: {e.Message}");
-                }
-                catch (Exception e)
-                {
-                    // Muestra errores inesperados
-                    Console.WriteLine($"Unexpected Error: {e.Message}");
+                    // Captura y muestra errores de ejecución
+                    Console.WriteLine($"[Runtime Error - Línea {ex.Line}] {ex.Message}");
                 }
             }
         }
 
         #endregion
 
-        #region Expression Evaluation
+        #region ExpressionEvaluation
 
         /// <summary>
-        /// Evalúa una expresión y retorna su valor entero.
+        /// Evalúa una expresión y devuelve su valor entero.
         /// </summary>
         /// <param name="expr">Expresión a evaluar.</param>
-        /// <param name="line">Línea de código para contexto de error.</param>
-        public int EvaluateExpression(Expr expr, int line = 0)
+        /// <returns>Valor entero de la expresión.</returns>
+        public int EvaluateExpression(Expr expr)
         {
-            return expr switch
+            switch (expr)
             {
-                LiteralExpr l => ParseLiteral(l.Value, line),
-                VariableExpr v => _variables.TryGetValue(v.Name, out var val)
-                    ? val
-                    : throw new UndefinedVariableError(v.Name, line),
-                BinaryExpr b => EvaluateBinary(b, line),
-                FunctionCallExpr f => EvaluateFunctionCall(f, line),
-                _ => throw new EmptyExpressionError("Unknown expression type", line)
-            };
-        }
+                case LiteralExpr lit:
+                    if (int.TryParse(lit.Value, out int val))
+                        return val;
+                    throw new InvalidLiteralError(lit.Value, expr.Line);
 
-        /// <summary>
-        /// Convierte un literal a entero, lanza error si no es válido.
-        /// </summary>
-        private int ParseLiteral(string value, int line)
-        {
-            if (int.TryParse(value, out int number))
-                return number;
+                case VariableExpr var:
+                    if (_variables.TryGetValue(var.Name, out int value))
+                        return value;
+                    throw new UndefinedVariableError(var.Name, expr.Line);
 
-            throw new InvalidLiteralError(value, line);
-        }
+                case BinaryExpr bin:
+                    int left = EvaluateExpression(bin.Left);
+                    int right = EvaluateExpression(bin.Right);
+                    return bin.Operator switch
+                    {
+                        "+" => left + right,
+                        "-" => left - right,
+                        "*" => left * right,
+                        "/" => right == 0 ? throw new DivisionByZeroError(expr.Line) : left / right,
+                        "%" => left % right,
+                        "**" => (int)Math.Pow(left, right),
+                        _ => throw new UnknownOperatorError(bin.Operator, expr.Line)
+                    };
 
-        /// <summary>
-        /// Evalúa una expresión binaria (+, -, *, /, %, **).
-        /// </summary>
-        private int EvaluateBinary(BinaryExpr b, int line)
-        {
-            int left = EvaluateExpression(b.Left, line);
-            int right = EvaluateExpression(b.Right, line);
+                case FunctionCallExpr fn:
+                    return fn.FunctionName switch
+                    {
+                        "GetActualX" => _canvas.GetCursorX(),
+                        "GetActualY" => _canvas.GetCursorY(),
+                        "GetCanvasSize" => _canvas.Cols * _canvas.Rows,
+                        "GetColorCount" => Enum.GetNames(typeof(KnownColor)).Length,
+                        "IsBrushColor" => IsBrushColor(fn, expr.Line),
+                        "IsBrushSize" => IsBrushSize(fn, expr.Line),
+                        "IsCanvasColor" => IsCanvasColor(fn, expr.Line),
+                        _ => throw new FunctionNotImplementedError(fn.FunctionName, expr.Line)
+                    };
 
-            return b.Operator switch
-            {
-                "+" => left + right,
-                "-" => left - right,
-                "*" => left * right,
-                "/" => right != 0 ? left / right : throw new DivisionByZeroError(line),
-                "%" => left % right,
-                "**" => (int)Math.Pow(left, right),
-                _ => throw new UnknownOperatorError(b.Operator, line)
-            };
-        }
-
-        /// <summary>
-        /// Evalúa una llamada a función especial (GetActualX, IsBrushColor, etc).
-        /// </summary>
-        private int EvaluateFunctionCall(FunctionCallExpr f, int line)
-        {
-            string name = f.FunctionName;
-
-            return name switch
-            {
-                "GetActualX" => Canvas.Width / 2,
-                "GetActualY" => Canvas.Height / 2,
-                "GetCanvasSize" => Canvas.Width,
-                "GetColorCount" => 10,
-                "IsBrushColor" => EvalIsBrushColor(f, line),
-                "IsBrushSize" => EvalIsBrushSize(f, line),
-                "IsCanvasColor" => EvalIsCanvasColor(f, line),
-                _ => throw new FunctionNotImplementedError(name, line)
-            };
-        }
-
-        /// <summary>
-        /// Evalúa si el color del pincel es igual al especificado.
-        /// </summary>
-        private int EvalIsBrushColor(FunctionCallExpr f, int line)
-        {
-            if (f.Arguments.Count != 1)
-                throw new InvalidFunctionArityError("IsBrushColor", 1, f.Arguments.Count, line);
-
-            if (f.Arguments[0] is LiteralExpr literal)
-            {
-                string color = literal.Value.Trim('"').ToLower();
-                return color == BrushColor.Name.ToLower() ? 1 : 0;
+                default:
+                    throw new EmptyExpressionError("expresión", expr.Line);
             }
-
-            throw new InvalidArgumentError("IsBrushColor requires a string literal", line);
-        }
-
-        /// <summary>
-        /// Evalúa si el tamaño del pincel es igual al especificado.
-        /// </summary>
-        private int EvalIsBrushSize(FunctionCallExpr f, int line)
-        {
-            if (f.Arguments.Count != 1)
-                throw new InvalidFunctionArityError("IsBrushSize", 1, f.Arguments.Count, line);
-
-            int value = EvaluateExpression(f.Arguments[0], line);
-            return value == BrushSize ? 1 : 0;
-        }
-
-        /// <summary>
-        /// Evalúa si el color del canvas es igual al especificado.
-        /// </summary>
-        private int EvalIsCanvasColor(FunctionCallExpr f, int line)
-        {
-            if (f.Arguments.Count != 1)
-                throw new InvalidFunctionArityError("IsCanvasColor", 1, f.Arguments.Count, line);
-
-            if (f.Arguments[0] is LiteralExpr literal)
-            {
-                string color = literal.Value.Trim('"').ToLower();
-                return color == Canvas.BackColor.Name.ToLower() ? 1 : 0;
-            }
-
-            throw new InvalidArgumentError("IsCanvasColor requires a string literal", line);
         }
 
         #endregion
 
-        #region Variable Helpers
+        #region PublicHelperMethods
 
         /// <summary>
-        /// Asigna un valor a una variable (o la crea si no existe).
+        /// Evalúa una condición en formato texto y devuelve 1 (true) o 0 (false).
         /// </summary>
-        /// <param name="name">Nombre de la variable.</param>
-        /// <param name="value">Valor a asignar.</param>
-        /// <param name="line">Línea de código para contexto de error.</param>
-        public void AssignVariable(string name, int value, int line)
-        {
-            _variables[name] = value;
-            Console.WriteLine($"[Line {line}] {name} = {value}");
-        }
-
-        #endregion
-
-        #region Brush and Canvas Helpers
-
-        /// <summary>
-        /// Cambia el color del pincel y lo actualiza en el canvas.
-        /// </summary>
-        public void SetBrushColor(Color color)
-        {
-            BrushColor = color;
-            Canvas.SetBrushColor(color);
-        }
-
-        /// <summary>
-        /// Cambia el tamaño del pincel y lo actualiza en el canvas.
-        /// </summary>
-        public void SetBrushSize(int size)
-        {
-            BrushSize = size;
-            Canvas.SetBrushSize(size);
-        }
-
-        #endregion
-
-        #region Label Map
-
-        /// <summary>
-        /// Construye un mapa de etiquetas a sus posiciones en la lista de instrucciones.
-        /// </summary>
-        private Dictionary<string, int> BuildLabelMap(List<ICode> codes)
-        {
-            Dictionary<string, int> map = new();
-
-            for (int i = 0; i < codes.Count; i++)
-            {
-                if (codes[i] is LabelCommand lbl)
-                    map[lbl.Name] = i;
-            }
-
-            return map;
-        }
-
-        #endregion
-
-        #region Condition Evaluation
-
-        /// <summary>
-        /// Evalúa una condición textual (por ejemplo, "x > 5") y retorna 1 (true) o 0 (false).
-        /// </summary>
-        /// <param name="condition">Condición en texto.</param>
-        /// <param name="line">Línea de código para contexto de error.</param>
-        public int EvaluateConditionText(string condition, int line)
+        /// <param name="text">Condición en texto.</param>
+        /// <param name="line">Línea de código.</param>
+        /// <returns>1 si la condición es verdadera, 0 si es falsa.</returns>
+        public int EvaluateConditionText(string text, int line)
         {
             try
             {
                 string[] ops = { "==", "!=", ">=", "<=", "<", ">" };
                 foreach (string op in ops)
                 {
-                    if (condition.Contains(op))
+                    if (text.Contains(op))
                     {
-                        string[] parts = condition.Split(op);
+                        string[] parts = text.Split(op);
                         int left = EvaluateTextExpression(parts[0].Trim());
                         int right = EvaluateTextExpression(parts[1].Trim());
 
@@ -300,27 +183,112 @@ namespace Wall_E
                     }
                 }
 
-                // Si no hay operador, evalúa como expresión simple
-                return EvaluateTextExpression(condition.Trim());
+                return EvaluateTextExpression(text);
             }
             catch
             {
-                throw new InvalidCommandError("Goto", "Invalid condition: " + condition, line);
+                throw new EmptyExpressionError("condición", line);
             }
         }
 
         /// <summary>
-        /// Evalúa una expresión textual (puede ser número o variable).
+        /// Asigna un valor a una variable.
         /// </summary>
-        private int EvaluateTextExpression(string text)
-        {
-            if (int.TryParse(text, out int number))
-                return number;
+        /// <param name="name">Nombre de la variable.</param>
+        /// <param name="value">Valor a asignar.</param>
+        public void AssignVariable(string name, int value) => _variables[name] = value;
 
-            return _variables.TryGetValue(text, out int val) ? val : 0;
-        }
+        /// <summary>
+        /// Cambia el color actual del pincel.
+        /// </summary>
+        /// <param name="color">Color a establecer.</param>
+        public void SetBrushColor(Color color) => _canvas.SetColor(color);
 
         #endregion
 
+        #region PrivateHelperMethods
+
+        /// <summary>
+        /// Evalúa una expresión en texto (literal o variable).
+        /// </summary>
+        /// <param name="txt">Texto a evaluar.</param>
+        /// <returns>Valor entero correspondiente.</returns>
+        private int EvaluateTextExpression(string txt)
+        {
+            if (int.TryParse(txt, out int val))
+                return val;
+
+            if (_variables.TryGetValue(txt, out int result))
+                return result;
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Verifica si el color actual del pincel coincide con el argumento.
+        /// </summary>
+        private int IsBrushColor(FunctionCallExpr fn, int line)
+        {
+            if (fn.Arguments.Count != 1)
+                throw new InvalidFunctionArityError("IsBrushColor", 1, fn.Arguments.Count, line);
+
+            Expr arg = fn.Arguments[0];
+            if (arg is not LiteralExpr lit || !lit.Value.StartsWith("\""))
+                throw new InvalidArgumentError("El argumento debe ser una cadena entre comillas", line);
+
+            string name = lit.Value.Trim('"');
+            return string.Equals(name, _canvas.GetCurrentColor().Name, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        }
+
+        /// <summary>
+        /// Verifica si el tamaño del pincel coincide con el argumento.
+        /// </summary>
+        private int IsBrushSize(FunctionCallExpr fn, int line)
+        {
+            if (fn.Arguments.Count != 1)
+                throw new InvalidFunctionArityError("IsBrushSize", 1, fn.Arguments.Count, line);
+
+            Expr arg = fn.Arguments[0];
+            if (arg is not LiteralExpr lit || !int.TryParse(lit.Value, out int size))
+                throw new InvalidArgumentError("El argumento debe ser un número entero", line);
+
+            return size == _canvas.GetBrushSize() ? 1 : 0;
+        }
+
+        /// <summary>
+        /// Verifica si el color del canvas coincide con el argumento.
+        /// </summary>
+        private int IsCanvasColor(FunctionCallExpr fn, int line)
+        {
+            if (fn.Arguments.Count != 1)
+                throw new InvalidFunctionArityError("IsCanvasColor", 1, fn.Arguments.Count, line);
+
+            Expr arg = fn.Arguments[0];
+            if (arg is not LiteralExpr lit || !lit.Value.StartsWith("\""))
+                throw new InvalidArgumentError("El argumento debe ser una cadena entre comillas", line);
+
+            string colorName = lit.Value.Trim('"');
+            return _canvas.GetPixelColor(0, 0, line).Name.Equals(colorName, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        }
+
+        /// <summary>
+        /// Construye un mapa de etiquetas para saltos rápidos en el código.
+        /// </summary>
+        /// <param name="codes">Lista de instrucciones.</param>
+        /// <returns>Diccionario de etiquetas y su posición.</returns>
+        private Dictionary<string, int> BuildLabelMap(List<ICode> codes)
+        {
+            Dictionary<string, int> map = new();
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i] is LabelCommand lbl)
+                {
+                    map[lbl.Name] = i;
+                }
+            }
+            return map;
+        }
+
+        #endregion
     }
 }

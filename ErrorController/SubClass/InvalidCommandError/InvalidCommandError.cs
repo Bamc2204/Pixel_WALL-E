@@ -13,9 +13,9 @@ public class InvalidCommandError : RuntimeError
     /// <summary>
     /// Inicializa la excepción con el nombre del comando, el detalle del error y la línea donde ocurrió.
     /// </summary>
-    /// <param name="command">Nombre del comando inválido.</param>
-    /// <param name="detail">Detalle del error.</param>
-    /// <param name="line">Línea del código donde ocurrió el error.</param>
+    /// <param name="command">Nombre del comando que fue usado incorrectamente.</param>
+    /// <param name="detail">Detalle específico del error.</param>
+    /// <param name="line">Línea donde ocurrió el error.</param>
     public InvalidCommandError(string command, string detail, int line)
         : base($"Invalid use of '{command}': {detail}", line) { }
 

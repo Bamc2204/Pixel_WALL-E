@@ -71,8 +71,10 @@ public class AssignmentCommand : ICode
     /// <param name="executor">Executor que gestiona el estado y ejecución.</param>
     public void Execute(Executor executor)
     {
+        // Evalúa la expresión y asigna el resultado a la variable.
         int value = executor.EvaluateExpression(Expression);
-        executor.AssignVariable(VariableName, value, Line);
+        executor.AssignVariable(VariableName, value);
+        // Muestra en consola la asignación realizada.
         Console.WriteLine($"[Line {Line}] {VariableName} = {value}");
     }
 
