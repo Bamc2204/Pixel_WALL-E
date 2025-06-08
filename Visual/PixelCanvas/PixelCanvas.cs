@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Collections.Generic;
 #nullable enable
 
 namespace Wall_E
@@ -165,7 +166,7 @@ namespace Wall_E
             _cursorPosition = new Point(x, y);
             Invalidate();
         }
-        
+
         /// <summary>
         /// Dibuja un círculo desde la posición actual del cursor.
         /// </summary>
@@ -213,9 +214,40 @@ namespace Wall_E
         /// </summary>
         public void Fill(Color color)
         {
-            for (int x = 0; x < _cols; x++)
-                for (int y = 0; y < _rows; y++)
-                    _pixels[x, y] = color.ToArgb();
+            int startX = _cursorPosition.X;
+            int startY = _cursorPosition.Y;
+
+            if (startX < 0 || startX >= _cols || startY < 0 || startY >= _rows)
+                return;
+
+            int targetColor = _pixels[startX, startY];
+            int fillColor = color.ToArgb();
+
+            if (targetColor == fillColor)
+                return;
+
+            Queue<Point> queue = new Queue<Point>();
+            queue.Enqueue(new Point(startX, startY));
+
+            while (queue.Count > 0)
+            {
+                Point p = queue.Dequeue();
+                int x = p.X;
+                int y = p.Y;
+
+                if (x < 0 || x >= _cols || y < 0 || y >= _rows)
+                    continue;
+
+                if (_pixels[x, y] != targetColor)
+                    continue;
+
+                _pixels[x, y] = fillColor;
+
+                queue.Enqueue(new Point(x + 1, y));
+                queue.Enqueue(new Point(x - 1, y));
+                queue.Enqueue(new Point(x, y + 1));
+                queue.Enqueue(new Point(x, y - 1));
+            }
 
             Invalidate();
         }
