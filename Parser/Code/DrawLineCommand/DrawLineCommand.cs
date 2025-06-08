@@ -27,10 +27,10 @@ namespace Wall_E
             int dy = Convert.ToInt32(executor.EvaluateExpression(Arguments[1]));
             int length = Convert.ToInt32(executor.EvaluateExpression(Arguments[2]));
 
-            // Dibuja la línea en el canvas.
-            executor.Canvas.DrawLine(dx, dy, length);
+            // Dibuja la línea en el canvas usando el color y tamaño actuales del pincel.
+            executor.Canvas.DrawLine(dx, dy, length, executor.BrushColor, executor.BrushSize);
         }
-
+        
         #endregion
     }
 

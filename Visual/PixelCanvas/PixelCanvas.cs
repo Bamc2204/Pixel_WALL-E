@@ -150,14 +150,14 @@ namespace Wall_E
         /// <summary>
         /// Dibuja una línea desde la posición actual del cursor en la dirección y distancia indicadas.
         /// </summary>
-        public void DrawLine(int dx, int dy, int distance)
+        public void DrawLine(int dx, int dy, int distance, Color color, int size)
         {
             int x = _cursorPosition.X;
             int y = _cursorPosition.Y;
 
             for (int i = 0; i < distance; i++)
             {
-                DrawPoint(x, y);
+                DrawPoint(x, y, color, size);
                 x += dx;
                 y += dy;
             }
@@ -165,7 +165,7 @@ namespace Wall_E
             _cursorPosition = new Point(x, y);
             Invalidate();
         }
-
+        
         /// <summary>
         /// Dibuja un círculo desde la posición actual del cursor.
         /// </summary>

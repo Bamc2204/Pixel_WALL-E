@@ -106,7 +106,7 @@ namespace Wall_E
                 case TokenType.IDENTIFIER:
                     // Si el siguiente token es una asignación, parsea como asignación.
                     if (CheckNext(TokenType.ASSIGN)) return ParseAssignment();
-                    System.Windows.Forms.MessageBox.Show($"Identificador fuera de contexto: '{token.Lexeme}' en línea {token.Line}");
+                    //System.Windows.Forms.MessageBox.Show($"Identificador fuera de contexto: '{token.Lexeme}' en línea {token.Line}");
                     throw new InvalidCommandError(token.Lexeme, $"Instrucción no válida: '{token.Lexeme}'", token.Line);
                 default:
                     throw new InvalidCommandError(token.Lexeme, $"Instrucción no válida: '{token.Lexeme}'", token.Line);

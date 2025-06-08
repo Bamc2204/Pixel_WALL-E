@@ -1,3 +1,5 @@
+using System;
+
 namespace Wall_E
 {
     #region AssignmentCommandClass
@@ -36,7 +38,7 @@ namespace Wall_E
         public void Execute(Executor executor)
         {
             // Evalúa la expresión y la convierte a int (ajusta si tu lenguaje soporta otros tipos)
-            int value = executor.EvaluateExpression(Expression);
+            int value = Convert.ToInt32(executor.EvaluateExpression(Expression));
             // Pasa el argumento 'Line' requerido por AssignVariable
             executor.AssignVariable(VariableName, value, Line);
         }

@@ -20,7 +20,7 @@ namespace Wall_E
         /// <summary>
         /// Color actual del pincel.
         /// </summary>
-        public Color BrushColor { get; private set; } = Color.Black;
+        public Color BrushColor { get; private set; } = Color.Transparent;
 
         /// <summary>
         /// Tamaño actual del pincel.
@@ -125,14 +125,18 @@ namespace Wall_E
         /// Evalúa una expresión y devuelve su valor entero.
         /// Soporta literales, variables, operaciones binarias y llamadas a funciones especiales.
         /// </summary>
-        public int EvaluateExpression(Expr expr)
+        public object EvaluateExpression(Expr expr)
         {
             switch (expr)
             {
                 case LiteralExpr l:
+                    // Si es un número, retorna el número
                     if (int.TryParse(l.Value, out int value))
                         return value;
-                    throw new InvalidArgumentError($"Literal inválido: {l.Value}", "No se pudo convertir a número", expr.Line);
+                    // Si empieza y termina con comillas, es un string: quita las comillas
+                    if (l.Value.StartsWith("\"") && l.Value.EndsWith("\""))
+                        return l.Value.Substring(1, l.Value.Length - 2);
+                    throw new InvalidArgumentError($"Literal inválido: {l.Value}", "No se pudo convertir a número o string", expr.Line);
 
                 case VariableExpr v:
                     if (_variables.TryGetValue(v.Name, out int val))
@@ -140,9 +144,8 @@ namespace Wall_E
                     throw new UndefinedVariableError($"Variable no definida: {v.Name}", "Debe declarar la variable antes de usarla", expr.Line);
 
                 case BinaryExpr b:
-                    int left = EvaluateExpression(b.Left);
-                    int right = EvaluateExpression(b.Right);
-
+                    int left = Convert.ToInt32(EvaluateExpression(b.Left));
+                    int right = Convert.ToInt32(EvaluateExpression(b.Right));
                     return b.Operator switch
                     {
                         "+" => left + right,
@@ -206,7 +209,7 @@ namespace Wall_E
         /// </summary>
         public bool EvaluateCondition(Expr expr)
         {
-            return EvaluateExpression(expr) != 0;
+             return Convert.ToInt32(EvaluateExpression(expr)) != 0;
         }
 
         #endregion

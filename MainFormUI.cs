@@ -22,7 +22,7 @@ namespace Wall_E
         // Canvas de píxeles para dibujar.
         private PixelCanvas pixelCanvas = null!;
         // Caja de texto para mostrar errores.
-        private TextBox errorBox = null!;
+        private TextBox wall_EConsole = null!;
         // Splitter principal de la ventana.
         private SplitContainer mainSplit = null!;
 
@@ -190,7 +190,7 @@ namespace Wall_E
             rightPanel.Controls.Add(buttonsPanel, 0, 1);
 
             // Caja de errores.
-            errorBox = new TextBox
+            wall_EConsole = new TextBox
             {
                 Multiline = true,
                 ReadOnly = true,
@@ -200,7 +200,7 @@ namespace Wall_E
                 ForeColor = Color.DarkRed,
                 Font = new Font("Consolas", 9)
             };
-            rightPanel.Controls.Add(errorBox, 0, 2);
+            rightPanel.Controls.Add(wall_EConsole, 0, 2);
         }
 
         #endregion
@@ -212,7 +212,7 @@ namespace Wall_E
         /// </summary>
         private void RunCode_Click(object sender, EventArgs e)
         {
-            errorBox.Clear();
+            wall_EConsole.Clear();
             pixelCanvas.Clear();
             ErrorManager.Clear();
 
@@ -233,7 +233,7 @@ namespace Wall_E
                 // Muestra los errores de análisis directamente
                 if (errors.Count > 0)
                 {
-                    errorBox.Text = string.Join(Environment.NewLine, errors);
+                    wall_EConsole.Text = string.Join(Environment.NewLine, errors);
                     return;
                 }
 
@@ -242,15 +242,15 @@ namespace Wall_E
 
                 // Muestra los errores de ejecución si los hay
                 if (errors.Count > 0)
-                    errorBox.Text = string.Join(Environment.NewLine, errors);
+                    wall_EConsole.Text = string.Join(Environment.NewLine, errors);
             }
             catch (RuntimeError ex)
             {
-                errorBox.Text = $"[Runtime Error] Línea {ex.Line}: {ex.Message}";
+                wall_EConsole.Text = $"[Runtime Error] Línea {ex.Line}: {ex.Message}";
             }
             catch (Exception ex)
             {
-                errorBox.Text = $"[Internal Error] {ex.Message}";
+                wall_EConsole.Text = $"[Internal Error] {ex.Message}";
             }
         }
 
