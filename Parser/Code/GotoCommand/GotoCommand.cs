@@ -1,11 +1,10 @@
-using System;
-
 namespace Wall_E
 {
     #region GotoCommandClass
 
     /// <summary>
     /// Representa un comando de salto condicional a una etiqueta si la condición se cumple.
+    /// Este comando permite alterar el flujo de ejecución del programa.
     /// </summary>
     public class GotoCommand : ICode
     {
@@ -35,17 +34,15 @@ namespace Wall_E
         /// </summary>
         /// <param name="executor">Ejecutor actual que mantiene el contexto de ejecución.</param>
         /// <remarks>
-        /// Este método evalúa la condición asociada al salto. Si la condición es verdadera,
-        /// el control real del salto debe estar implementado en el Executor.
+        /// Este método evalúa la condición asociada al salto. El control real del salto
+        /// (mover el flujo de ejecución) debe estar implementado en el Executor.
+        /// Aquí solo se podría validar la existencia de la etiqueta o evaluar la condición.
         /// </remarks>
         public void Execute(Executor executor)
         {
             // Solo evalúa la condición. El salto real se maneja en Executor.Execute.
-            // Si quieres, puedes lanzar una excepción si la etiqueta no existe, pero NO debes saltar aquí.
-            // Ejemplo:
-            // if (result && !executor.LabelExists(TargetLabel))
-            //     throw new LabelNotFoundError(TargetLabel, $"Etiqueta no encontrada: {TargetLabel}", Line);
-            // Pero normalmente, solo se evalúa la condición aquí.
+            // Si se desea, aquí se puede validar la existencia de la etiqueta,
+            // pero no se debe realizar el salto en este método.
         }
 
         #endregion

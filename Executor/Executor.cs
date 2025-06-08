@@ -6,6 +6,7 @@ namespace Wall_E
 {
     /// <summary>
     /// Clase encargada de ejecutar la lista de comandos (ICode) y mantener el estado de las variables y el canvas.
+    /// Gestiona la ejecución secuencial, saltos condicionales, evaluación de expresiones y el estado del pincel.
     /// </summary>
     public class Executor
     {
@@ -54,6 +55,7 @@ namespace Wall_E
 
         /// <summary>
         /// Ejecuta la lista de comandos recibida.
+        /// Controla saltos de etiquetas y errores de ejecución.
         /// </summary>
         /// <param name="codes">Lista de comandos a ejecutar.</param>
         public void Execute(List<ICode> codes)
@@ -102,6 +104,7 @@ namespace Wall_E
 
         /// <summary>
         /// Construye un diccionario con las etiquetas y su posición en la lista de comandos.
+        /// Permite saltos eficientes a etiquetas durante la ejecución.
         /// </summary>
         private Dictionary<string, int> BuildLabelMap(List<ICode> codes)
         {
@@ -120,6 +123,7 @@ namespace Wall_E
 
         /// <summary>
         /// Evalúa una expresión y devuelve su valor entero.
+        /// Soporta literales, variables, operaciones binarias y llamadas a funciones especiales.
         /// </summary>
         public int EvaluateExpression(Expr expr)
         {
@@ -198,10 +202,10 @@ namespace Wall_E
 
         /// <summary>
         /// Evalúa una condición booleana a partir de una expresión.
+        /// Considera verdadera si el resultado es distinto de cero.
         /// </summary>
         public bool EvaluateCondition(Expr expr)
         {
-            // Considera verdadera si el resultado es distinto de cero.
             return EvaluateExpression(expr) != 0;
         }
 

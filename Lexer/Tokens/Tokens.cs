@@ -1,6 +1,3 @@
-using System;
-using Wall_E; // Importa el enum TokenType
-
 namespace Wall_E
 {
     #region TokenClass

@@ -45,36 +45,29 @@ namespace Wall_E
 
             while (!IsAtEnd())
             {
-                // Si el carácter actual es un espacio en blanco.
+                // Manejo de espacios y saltos de línea.
                 if (char.IsWhiteSpace(Peek()))
                 {
-                    // Si es salto de línea, aumenta el contador de línea y agrega un token NEWLINE.
                     if (Peek() == '\n')
                     {
                         _line++;
                         _newLineJustPassed = true;
                         tokens.Add(new Token(TokenType.NEWLINE, "\\n", _line));
                     }
-                    Advance(); // Avanza al siguiente carácter.
+                    Advance();
                     continue;
                 }
 
-                // Si el carácter es una letra o un guion bajo, puede ser palabra clave, identificador o etiqueta.
+                // --- ETIQUETAS, PALABRAS CLAVE E IDENTIFICADORES ---
                 if (char.IsLetter(Peek()) || Peek() == '_')
                 {
-                    // Lee la palabra completa (letras, dígitos o guion bajo).
+                    // Lee una palabra formada por letras, dígitos y guion bajo.
                     string word = ReadWhile(ch => char.IsLetterOrDigit(ch) || ch == '_');
 
-                    // Detectar si es palabra clave primero.
                     Token tokenAux = KeywordOrIdentifier(word);
 
-                    // Si es una palabra clave, siempre la usamos como tal.
-                    if (tokenAux.Type != TokenType.IDENTIFIER)
-                    {
-                        tokens.Add(tokenAux);
-                    }
-                    // Si está al inicio de línea y no tiene asignación, es una etiqueta.
-                    else if (_newLineJustPassed && !IsAssignmentJustAfter())
+                    // Si cumple las reglas de etiqueta y está sola en la línea, es LABEL_DEF
+                    if (IsValidLabel(word) && _newLineJustPassed && IsLabelAloneOnLine())
                     {
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
                     }
@@ -87,7 +80,7 @@ namespace Wall_E
                     continue;
                 }
 
-                // Si el carácter es un dígito, lee un número.
+                // Números
                 if (char.IsDigit(Peek()))
                 {
                     string number = ReadWhile(char.IsDigit);
@@ -96,33 +89,32 @@ namespace Wall_E
                     continue;
                 }
 
-                // Si el carácter es una comilla, lee una cadena de texto.
+                // Cadenas de texto
                 if (Peek() == '"')
                 {
-                    Advance(); // Consumir la primera comilla.
+                    Advance();
                     string str = ReadString();
                     tokens.Add(new Token(TokenType.STRING, str, _line));
                     _newLineJustPassed = false;
                     continue;
                 }
 
-                // Ignora comentarios con #.
+                // Comentarios (líneas que empiezan con #)
                 if (Peek() == '#')
                 {
-                    // Avanza hasta el final de la línea o del archivo.
                     while (!IsAtEnd() && Peek() != '\n')
                         Advance();
-                    continue; // Sigue al próximo token.
+                    continue;
                 }
 
-                // Si es cualquier otro carácter, intenta reconocerlo como símbolo u operador.
+                // Símbolos y operadores
                 char c = Advance();
                 Token token = RecognizeSymbolOrOperator(c);
                 tokens.Add(token);
                 _newLineJustPassed = false;
             }
 
-            // Al final, agrega un token de fin de archivo.
+            // Token de fin de archivo
             tokens.Add(new Token(TokenType.EOF, "", _line));
             return tokens;
         }
@@ -190,7 +182,7 @@ namespace Wall_E
                 if (Peek() == '\n') _line++;
                 sb.Append(Advance());
             }
-            if (!IsAtEnd()) Advance(); // Consume el cierre de comillas.
+            if (!IsAtEnd()) Advance();
             return sb.ToString();
         }
 
@@ -198,7 +190,7 @@ namespace Wall_E
 
         #region KeywordsAndIdentifiers
 
-        // Diccionario que asocia palabras clave con su tipo de token.
+        // Diccionario de palabras clave del lenguaje y su tipo de token.
         private static readonly Dictionary<string, TokenType> Keywords = new()
         {
             { "Spawn", TokenType.SPAWN },
@@ -219,6 +211,11 @@ namespace Wall_E
             { "IsCanvasColor", TokenType.IS_CANVAS_COLOR },
         };
 
+        /// <summary>
+        /// Determina si una palabra es palabra clave, identificador o desconocido.
+        /// </summary>
+        /// <param name="word">Palabra a analizar.</param>
+        /// <returns>Token correspondiente.</returns>
         private Token KeywordOrIdentifier(string word)
         {
             if (Keywords.TryGetValue(word, out var type))
@@ -230,12 +227,11 @@ namespace Wall_E
             {
                 foreach (char c in word)
                 {
-                    if (!(char.IsLetterOrDigit(c) || c == '_'))
+                    if (!(char.IsLetterOrDigit(c) || c == '_' || c == '-'))
                         return new Token(TokenType.UNKNOWN, word, _line);
                 }
                 return new Token(TokenType.IDENTIFIER, word, _line);
             }
-            // Si no cumple, es UNKNOWN
             return new Token(TokenType.UNKNOWN, word, _line);
         }
 
@@ -281,9 +277,52 @@ namespace Wall_E
                 case ']': return new Token(TokenType.RBRACKET, "]", _line);
                 case ',': return new Token(TokenType.COMMA, ",", _line);
             }
-
-            // Si no reconoce el símbolo, lo marca como UNKNOWN.
             return new Token(TokenType.UNKNOWN, c.ToString(), _line);
+        }
+
+        #endregion
+
+        #region LabelRecognitionHelpers
+
+        /// <summary>
+        /// Valida si una palabra cumple las reglas para ser etiqueta:
+        /// - No puede empezar por número ni por '_'
+        /// - Debe tener al menos una letra y al menos un guion bajo
+        /// - Solo puede contener letras, dígitos y guion bajo
+        /// </summary>
+        private bool IsValidLabel(string word)
+        {
+            if (word.Length == 0 || char.IsDigit(word[0]) || word[0] == '_')
+                return false;
+
+            bool hasLetter = false;
+            bool hasUnderscore = false;
+
+            foreach (char c in word)
+            {
+                if (char.IsLetter(c))
+                    hasLetter = true;
+                else if (c == '_')
+                    hasUnderscore = true;
+                else if (!char.IsDigit(c))
+                    return false; // Solo letras, dígitos y guion bajo permitidos
+            }
+
+            // Debe tener al menos una letra y al menos un guion bajo
+            return hasLetter && hasUnderscore;
+        }
+
+        /// <summary>
+        /// Verifica si la palabra está sola en la línea (solo espacios después).
+        /// </summary>
+        private bool IsLabelAloneOnLine()
+        {
+            int temp = _current;
+            // Salta espacios en blanco
+            while (temp < _source.Length && char.IsWhiteSpace(_source[temp]) && _source[temp] != '\n')
+                temp++;
+            // Debe ser fin de línea o fin de archivo
+            return temp >= _source.Length || _source[temp] == '\n';
         }
 
         #endregion
@@ -311,14 +350,9 @@ namespace Wall_E
         /// </summary>
         private bool IsAssignmentJustAfter()
         {
-            // Guardamos posición temporal.
             int temp = _current;
-
-            // Saltamos espacios en blanco.
             while (temp < _source.Length && char.IsWhiteSpace(_source[temp]))
                 temp++;
-
-            // Verificamos si hay un "<-".
             return temp + 1 < _source.Length &&
                 _source[temp] == '<' &&
                 _source[temp + 1] == '-';

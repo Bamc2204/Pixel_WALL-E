@@ -1,5 +1,3 @@
-using System;
-
 namespace Wall_E
 {
     #region TokenTypeEnum

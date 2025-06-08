@@ -7,20 +7,32 @@ using System.Windows.Forms;
 
 namespace Wall_E
 {
+    /// <summary>
+    /// Ventana principal del IDE de Pixel Wall-E. Gestiona la interfaz gráfica, el editor de código,
+    /// el canvas de dibujo, la consola de errores y la interacción con el usuario.
+    /// </summary>
     public class MainForm : Form
     {
         #region Fields
 
+        // Editor de código principal.
         private RichTextBox codeEditor = null!;
+        // Panel para mostrar los números de línea.
         private Panel lineNumberPanel = null!;
+        // Canvas de píxeles para dibujar.
         private PixelCanvas pixelCanvas = null!;
+        // Caja de texto para mostrar errores.
         private TextBox errorBox = null!;
+        // Splitter principal de la ventana.
         private SplitContainer mainSplit = null!;
 
         #endregion
 
         #region Constructor
 
+        /// <summary>
+        /// Inicializa la ventana principal y sus componentes.
+        /// </summary>
         public MainForm()
         {
             InitializeComponent();
@@ -30,6 +42,9 @@ namespace Wall_E
 
         #region UIInitialization
 
+        /// <summary>
+        /// Inicializa y configura todos los controles de la interfaz gráfica.
+        /// </summary>
         private void InitializeComponent()
         {
             Text = "Pixel Wall-E IDE";
@@ -206,6 +221,10 @@ namespace Wall_E
                 string input = codeEditor.Text;
                 var lexer = new Lexer(input);
                 List<Token> tokens = lexer.Tokenize();
+
+                // Muestra los tokens generados (para depuración)
+                // foreach (var t in tokens)
+                //     MessageBox.Show($"{t.Type} '{t.Lexeme}' línea {t.Line}");
 
                 var errors = new List<string>();
                 var parser = new Parser(tokens, errors);

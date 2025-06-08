@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace Wall_E
@@ -13,7 +12,7 @@ namespace Wall_E
     {
         #region PrivateFields
 
-        // Variable privada que almacena el código fuente escrito por el usuario
+        // Variable privada que almacena el código fuente escrito por el usuario.
         private string _sourceCode = "";
 
         #endregion
@@ -49,9 +48,9 @@ namespace Wall_E
         /// <returns>Lista de tokens generados por el Lexer.</returns>
         public List<Token> AnalyzeSourceCode()
         {
-            // Crea una instancia del Lexer, pasándole el código fuente
+            // Crea una instancia del Lexer, pasándole el código fuente.
             Lexer lexer = new Lexer(_sourceCode);
-            // Llama al método Tokenize del Lexer para obtener la lista de tokens
+            // Llama al método Tokenize del Lexer para obtener la lista de tokens.
             return lexer.Tokenize();
         }
 

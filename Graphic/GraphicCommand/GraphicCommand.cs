@@ -7,6 +7,7 @@ namespace Wall_E
     /// <summary>
     /// Clase base abstracta para comandos gráficos que usan una lista de argumentos.
     /// Hereda de la interfaz ICode.
+    /// Proporciona propiedades comunes y define el método de ejecución que deben implementar los comandos gráficos concretos.
     /// </summary>
     public abstract class GraphicCommand : ICode
     {

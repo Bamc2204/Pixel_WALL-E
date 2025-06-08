@@ -339,6 +339,7 @@ namespace Wall_E
             {
                 for (int y = 0; y < _rows; y++)
                 {
+                    // Obtiene el color del píxel y lo dibuja.
                     Color color = Color.FromArgb(_pixels[x, y]);
                     using Brush brush = new SolidBrush(color);
                     g.FillRectangle(brush, x * _pixelSize, y * _pixelSize, _pixelSize, _pixelSize);

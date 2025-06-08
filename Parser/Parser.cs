@@ -37,6 +37,10 @@ namespace Wall_E
 
         #region MainParseMethod
 
+        /// <summary>
+        /// Método principal: recorre la lista de tokens y genera la lista de comandos ejecutables.
+        /// Maneja errores de sintaxis y tokens desconocidos.
+        /// </summary>
         public List<ICode> Parse(List<string> errors)
         {
             List<ICode> codes = new();
@@ -47,18 +51,16 @@ namespace Wall_E
                     // Ignora saltos de línea.
                     if (Match(TokenType.NEWLINE)) continue;
 
-                    // --- CONTROL DE TOKENS DESCONOCIDOS ---
+                    // Control de tokens desconocidos.
                     if (Peek().Type == TokenType.UNKNOWN)
                     {
                         System.Diagnostics.Debug.WriteLine($"[DEBUG] Token desconocido: '{Peek().Lexeme}' en línea {Peek().Line}");
-                        // Lanza una excepción personalizada
                         throw new InvalidCommandError(
                             Peek().Lexeme,
                             $"Argumento o instrucción no válida: '{Peek().Lexeme}'",
                             Peek().Line
                         );
                     }
-                    // --------------------------------------
 
                     // Intenta parsear un comando.
                     ICode? code = ParseCode();
@@ -104,7 +106,7 @@ namespace Wall_E
                 case TokenType.IDENTIFIER:
                     // Si el siguiente token es una asignación, parsea como asignación.
                     if (CheckNext(TokenType.ASSIGN)) return ParseAssignment();
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Identificador fuera de contexto: '{token.Lexeme}' en línea {token.Line}");
+                    System.Windows.Forms.MessageBox.Show($"Identificador fuera de contexto: '{token.Lexeme}' en línea {token.Line}");
                     throw new InvalidCommandError(token.Lexeme, $"Instrucción no válida: '{token.Lexeme}'", token.Line);
                 default:
                     throw new InvalidCommandError(token.Lexeme, $"Instrucción no válida: '{token.Lexeme}'", token.Line);

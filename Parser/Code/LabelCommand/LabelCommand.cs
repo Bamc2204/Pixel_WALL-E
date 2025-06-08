@@ -1,11 +1,10 @@
-using System;
-
 namespace Wall_E
 {
     #region LabelCommandClass
 
     /// <summary>
     /// Representa una etiqueta en el código (como un marcador de posición para saltos).
+    /// Las etiquetas no ejecutan ninguna acción, solo sirven como destino de instrucciones Goto.
     /// </summary>
     public class LabelCommand : ICode
     {
