@@ -37,11 +37,6 @@ namespace Wall_E
 
         #region MainParseMethod
 
-        /// <summary>
-        /// Método principal que recorre los tokens y genera la lista de comandos (ICode).
-        /// </summary>
-        /// <param name="errors">Lista de errores para registrar problemas de parseo.</param>
-        /// <returns>Lista de comandos parseados.</returns>
         public List<ICode> Parse(List<string> errors)
         {
             List<ICode> codes = new();
@@ -51,19 +46,30 @@ namespace Wall_E
                 {
                     // Ignora saltos de línea.
                     if (Match(TokenType.NEWLINE)) continue;
+
+                    // --- CONTROL DE TOKENS DESCONOCIDOS ---
+                    if (Peek().Type == TokenType.UNKNOWN)
+                    {
+                        // Lanza una excepción personalizada
+                        throw new InvalidCommandError(
+                            Peek().Lexeme,
+                            $"Argumento o instrucción no válida: '{Peek().Lexeme}'",
+                            Peek().Line
+                        );
+                    }
+                    // --------------------------------------
+
                     // Intenta parsear un comando.
                     ICode? code = ParseCode();
                     if (code != null) codes.Add(code);
                 }
                 catch (RuntimeError ex)
                 {
-                    // Captura errores personalizados y avanza al siguiente token.
                     errors.Add($"[Parser Error] Línea {ex.Line}: {ex.Message}");
                     Advance();
                 }
                 catch (Exception ex)
                 {
-                    // Captura errores generales y avanza al siguiente token.
                     errors.Add($"[Parser Error] Línea {Peek().Line}: {ex.Message}");
                     Advance();
                 }
@@ -128,20 +134,14 @@ namespace Wall_E
             Consume(TokenType.RBRACKET, "Falta ']' después del nombre de la etiqueta");
             Consume(TokenType.LPAREN, "Falta '(' para la condición");
 
-            string condition = "";
-            int depth = 1;
-            while (!IsAtEnd() && depth > 0)
-            {
-                Token t = Advance();
-                if (t.Type == TokenType.LPAREN) depth++;
-                if (t.Type == TokenType.RPAREN) depth--;
-                if (depth > 0) condition += t.Lexeme + " ";
-            }
+            // Parsea la condición como una expresión.
+            Expr condition = ParseExpression();
+            Consume(TokenType.RPAREN, "Falta ')' al final de la condición");
 
             return new GotoCommand
             {
                 TargetLabel = label.Lexeme,
-                ConditionText = condition.Trim(),
+                Condition = condition,
                 Line = line
             };
         }

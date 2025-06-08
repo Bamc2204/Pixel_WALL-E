@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+#nullable enable
 
 namespace Wall_E
 {
@@ -14,21 +15,20 @@ namespace Wall_E
 
         // Tamaño de cada píxel en pantalla.
         private int _pixelSize = 5;
-        // Matriz que almacena el color de cada píxel (como ARGB).
+        // Matriz de colores de los píxeles.
         private readonly int[,] _pixels;
-        // Número de columnas del canvas.
+        // Número de columnas y filas del canvas.
         private readonly int _cols;
-        // Número de filas del canvas.
         private readonly int _rows;
         // Tamaño actual del pincel.
         private int _brushSize = 1;
         // Color actual del pincel.
         private Color _brushColor = Color.Black;
-        // Posición actual del cursor.
+        // Posición actual del cursor en el canvas.
         private Point _cursorPosition;
-        // Indica si el cursor debe mostrarse (para parpadeo).
+        // Controla si se muestra el cursor.
         private bool _showCursor = true;
-        // Timer para el parpadeo del cursor.
+        // Timer para parpadeo del cursor.
         private Timer _cursorTimer;
 
         #endregion
@@ -38,8 +38,6 @@ namespace Wall_E
         /// <summary>
         /// Inicializa el canvas con el número de columnas y filas especificado.
         /// </summary>
-        /// <param name="cols">Columnas del canvas.</param>
-        /// <param name="rows">Filas del canvas.</param>
         public PixelCanvas(int cols = 128, int rows = 128)
         {
             _cols = cols;
@@ -51,9 +49,10 @@ namespace Wall_E
             DoubleBuffered = true;
             BackColor = Color.White;
 
+            // Inicializa el cursor en el centro del canvas.
             _cursorPosition = new Point(cols / 2, rows / 2);
 
-            // Timer para cursor intermitente
+            // Configura el timer para el parpadeo del cursor.
             _cursorTimer = new Timer { Interval = 500 };
             _cursorTimer.Tick += (s, e) =>
             {
@@ -68,79 +67,88 @@ namespace Wall_E
         #region Properties
 
         /// <summary>
-        /// Obtiene el tamaño actual del pincel.
+        /// Devuelve el tamaño actual del pincel.
         /// </summary>
         public int GetBrushSize() => _brushSize;
 
         /// <summary>
-        /// Obtiene la coordenada X del cursor.
+        /// Devuelve la posición X del cursor.
         /// </summary>
         public int GetCursorX() => _cursorPosition.X;
 
         /// <summary>
-        /// Obtiene la coordenada Y del cursor.
+        /// Devuelve la posición Y del cursor.
         /// </summary>
         public int GetCursorY() => _cursorPosition.Y;
 
         /// <summary>
-        /// Obtiene el color del píxel en la posición dada.
-        /// Lanza excepción si está fuera de los límites.
+        /// Devuelve el color del píxel en la posición indicada.
         /// </summary>
         public Color GetPixelColor(int x, int y, int line)
         {
             if (x < 0 || x >= _cols || y < 0 || y >= _rows)
                 throw new CanvasOutOfBoundsError(x, y, _cols, _rows, line);
 
-            int colorIndex = _pixels[y, x];
+            int colorIndex = _pixels[x, y];
             return Color.FromArgb(colorIndex);
         }
 
         /// <summary>
-        /// Establece el color actual del pincel.
+        /// Cambia el color actual del pincel.
         /// </summary>
         public void SetColor(Color color) => _brushColor = color;
 
         /// <summary>
-        /// Obtiene el color actual del pincel.
+        /// Devuelve el color actual del pincel.
         /// </summary>
         public Color GetCurrentColor() => _brushColor;
 
         /// <summary>
-        /// Establece el color actual del pincel.
+        /// Cambia el color actual del pincel.
         /// </summary>
         public void SetBrushColor(Color color) => _brushColor = color;
 
         /// <summary>
-        /// Establece el tamaño actual del pincel.
+        /// Cambia el tamaño actual del pincel.
         /// </summary>
         public void SetBrushSize(int size) => _brushSize = size;
 
         /// <summary>
-        /// Obtiene la coordenada X del cursor (propiedad).
+        /// Devuelve la posición X del cursor.
         /// </summary>
         public int CursorX => _cursorPosition.X;
 
         /// <summary>
-        /// Obtiene la coordenada Y del cursor (propiedad).
+        /// Devuelve la posición Y del cursor.
         /// </summary>
         public int CursorY => _cursorPosition.Y;
 
         /// <summary>
-        /// Obtiene el número de columnas del canvas.
+        /// Devuelve el número de columnas del canvas.
         /// </summary>
         public int Cols => _cols;
 
         /// <summary>
-        /// Obtiene el número de filas del canvas.
+        /// Devuelve el número de filas del canvas.
         /// </summary>
         public int Rows => _rows;
+
+        /// <summary>
+        /// Devuelve el ancho total del canvas en píxeles.
+        /// </summary>
+        public int WidthInPixels => _cols * _pixelSize;
+
+        /// <summary>
+        /// Devuelve el alto total del canvas en píxeles.
+        /// </summary>
+        public int HeightInPixels => _rows * _pixelSize;
 
         #endregion
 
         #region Drawing Methods
 
         /// <summary>
-        /// Dibuja una línea desde la posición actual del cursor en la dirección y distancia dadas.
+        /// Dibuja una línea desde la posición actual del cursor en la dirección y distancia indicadas.
         /// </summary>
         public void DrawLine(int dx, int dy, int distance)
         {
@@ -239,7 +247,7 @@ namespace Wall_E
         /// <summary>
         /// Mueve el cursor a una posición específica.
         /// </summary>
-        public void Spawn(int x, int y)
+        public void SetCursorPosition(int x, int y)
         {
             if (!IsInBounds(x, y))
                 throw new CanvasOutOfBoundsError(x, y, _cols, _rows, _pixelSize);
@@ -249,35 +257,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Aumenta el tamaño de los píxeles (zoom in).
-        /// </summary>
-        public void ZoomIn()
-        {
-            _pixelSize = Math.Min(_pixelSize + 2, 60);
-            ResizeCanvas();
-        }
-
-        /// <summary>
-        /// Disminuye el tamaño de los píxeles (zoom out).
-        /// </summary>
-        public void ZoomOut()
-        {
-            _pixelSize = Math.Max(_pixelSize - 2, 2);
-            ResizeCanvas();
-        }
-
-        /// <summary>
-        /// Ajusta el tamaño del canvas visual según el tamaño de los píxeles.
-        /// </summary>
-        private void ResizeCanvas()
-        {
-            Width = _cols * _pixelSize;
-            Height = _rows * _pixelSize;
-            Invalidate();
-        }
-
-        /// <summary>
-        /// Centra el área visible del panel en la posición del cursor.
+        /// Centra el scroll del panel en la posición actual del cursor.
         /// </summary>
         public void CenterOnCursor(Panel scrollPanel)
         {
@@ -288,7 +268,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Dibuja un punto en la posición dada usando el color y tamaño actuales.
+        /// Dibuja un punto en la posición indicada usando el color y tamaño actuales.
         /// </summary>
         private void DrawPoint(int cx, int cy)
         {
@@ -296,7 +276,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Dibuja un punto en la posición dada con color y tamaño específicos.
+        /// Dibuja un punto en la posición indicada usando el color y tamaño especificados.
         /// </summary>
         private void DrawPoint(int cx, int cy, Color color, int size)
         {
@@ -312,6 +292,34 @@ namespace Wall_E
 
                     _pixels[x, y] = color.ToArgb();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Aumenta el tamaño de los píxeles (zoom in).
+        /// </summary>
+        public void ZoomIn()
+        {
+            if (_pixelSize < 40)
+            {
+                _pixelSize += 2;
+                Width = _cols * _pixelSize;
+                Height = _rows * _pixelSize;
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// Disminuye el tamaño de los píxeles (zoom out).
+        /// </summary>
+        public void ZoomOut()
+        {
+            if (_pixelSize > 2)
+            {
+                _pixelSize -= 2;
+                Width = _cols * _pixelSize;
+                Height = _rows * _pixelSize;
+                Invalidate();
             }
         }
 

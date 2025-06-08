@@ -5,74 +5,47 @@ namespace Wall_E
     #region GotoCommandClass
 
     /// <summary>
-    /// Representa un comando de salto condicional hacia una etiqueta.
-    /// Sintaxis: Goto[etiqueta](condición)
+    /// Representa un comando de salto condicional a una etiqueta si la condición se cumple.
     /// </summary>
     public class GotoCommand : ICode
     {
         #region Properties
 
         /// <summary>
-        /// Nombre de la etiqueta de destino.
+        /// Etiqueta de destino del salto.
         /// </summary>
-        public string TargetLabel { get; set; }
+        public string TargetLabel { get; set; } = string.Empty;
 
         /// <summary>
-        /// Condición como string (por ejemplo: "x >= 3").
+        /// Condición booleana que se debe cumplir para realizar el salto.
         /// </summary>
-        public string ConditionText { get; set; }
+        public Expr Condition { get; set; } = null!;
 
         /// <summary>
-        /// Línea en la que se encuentra el comando en el código fuente.
+        /// Línea del código fuente donde ocurre el comando.
         /// </summary>
         public int Line { get; set; }
-
-        #endregion
-
-        #region JumpLogic
-
-        /// <summary>
-        /// Evalúa la condición y determina si se debe hacer el salto.
-        /// Si la condición es verdadera (distinta de cero), retorna true.
-        /// Si ocurre un error de ejecución, lanza una excepción de comando inválido.
-        /// </summary>
-        /// <param name="executor">Executor que evalúa la condición.</param>
-        /// <returns>True si se debe saltar, false si no.</returns>
-        public bool ShouldJump(Executor executor)
-        {
-            try
-            {
-                return executor.EvaluateConditionText(ConditionText, Line) != 0;
-            }
-            catch (RuntimeError e)
-            {
-                throw new InvalidCommandError("Goto", e.Message, Line);
-            }
-        }
 
         #endregion
 
         #region Execution
 
         /// <summary>
-        /// Ejecuta el comando (en realidad se gestiona desde Executor, así que esto no hace nada).
+        /// Ejecuta el comando de salto si la condición se cumple.
         /// </summary>
-        /// <param name="executor">Executor que gestiona la ejecución.</param>
+        /// <param name="executor">Ejecutor actual que mantiene el contexto de ejecución.</param>
+        /// <remarks>
+        /// Este método evalúa la condición asociada al salto. Si la condición es verdadera,
+        /// el control real del salto debe estar implementado en el Executor.
+        /// </remarks>
         public void Execute(Executor executor)
         {
-            // La lógica real del salto está en Executor, aquí no se hace nada.
-        }
-
-        #endregion
-
-        #region ToStringRepresentation
-
-        /// <summary>
-        /// Devuelve una representación en texto del comando Goto, mostrando la etiqueta, condición y línea.
-        /// </summary>
-        public override string ToString()
-        {
-            return $"Goto [{TargetLabel}] ({ConditionText}) [línea {Line}]";
+            // Solo evalúa la condición. El salto real se maneja en Executor.Execute.
+            // Si quieres, puedes lanzar una excepción si la etiqueta no existe, pero NO debes saltar aquí.
+            // Ejemplo:
+            // if (result && !executor.LabelExists(TargetLabel))
+            //     throw new LabelNotFoundError(TargetLabel, $"Etiqueta no encontrada: {TargetLabel}", Line);
+            // Pero normalmente, solo se evalúa la condición aquí.
         }
 
         #endregion

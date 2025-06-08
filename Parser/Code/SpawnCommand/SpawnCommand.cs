@@ -2,34 +2,21 @@ using System;
 
 namespace Wall_E
 {
-    /// <summary>
-    /// Comando que representa Spawn(x, y), posiciona el origen en el canvas.
-    /// </summary>
-    #region SpawnCommandClass
-    public class SpawnCommand : GraphicCommand, ICode
+    public class SpawnCommand : GraphicCommand
     {
-        #region Properties
-        // Número de línea donde se declaró el comando (propiedad en inglés)
-        public new int Line { get; set; }
-        
-        #endregion
-
-        #region ExecuteMethod
-        /// <summary>
-        /// Ejecuta el comando Spawn sobre el canvas visual.
-        /// </summary>
-        /// <param name="executor">Contexto de ejecución que contiene el canvas y estado.</param>
         public override void Execute(Executor executor)
         {
-            int x = executor.EvaluateExpression(Arguments[0]);
-            int y = executor.EvaluateExpression(Arguments[1]);
+            if (Arguments.Count != 2)
+                throw new InvalidArgumentError("Spawn", "Se esperaban 2 argumentos.", Line);
 
-            if (!executor.Canvas.IsInBounds(x, y))
-                throw new CanvasOutOfBoundsError(x, y, executor.Canvas.Cols, executor.Canvas.Rows, Line);
+            int x = Convert.ToInt32(executor.EvaluateExpression(Arguments[0]));
+            int y = Convert.ToInt32(executor.EvaluateExpression(Arguments[1]));
 
-            executor.Canvas.Spawn(x, y);
+            if (x < 0 || x >= executor.Canvas.Width || y < 0 || y >= executor.Canvas.Height)
+                throw new CanvasOutOfBoundsError(x, y, executor.Canvas.Width, executor.Canvas.Height, Line);
+
+            // Llama directamente al método del canvas para posicionar el cursor
+            executor.Canvas.SetCursorPosition(x, y);
         }
-        #endregion
     }
-    #endregion
 }

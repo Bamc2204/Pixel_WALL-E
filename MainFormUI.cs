@@ -4,7 +4,6 @@ using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-#nullable enable
 
 namespace Wall_E
 {
@@ -12,13 +11,10 @@ namespace Wall_E
     {
         #region Fields
 
-        // Editor de código principal.
         private RichTextBox codeEditor = null!;
-        // Canvas de píxeles para dibujar.
+        private Panel lineNumberPanel = null!;
         private PixelCanvas pixelCanvas = null!;
-        // Caja de texto para mostrar errores.
         private TextBox errorBox = null!;
-        // Contenedor principal dividido en dos paneles.
         private SplitContainer mainSplit = null!;
 
         #endregion
@@ -34,9 +30,6 @@ namespace Wall_E
 
         #region UIInitialization
 
-        /// <summary>
-        /// Inicializa todos los controles y la interfaz gráfica.
-        /// </summary>
         private void InitializeComponent()
         {
             Text = "Pixel Wall-E IDE";
@@ -78,8 +71,8 @@ namespace Wall_E
 
             openButton.Click += OpenFile;
             saveButton.Click += SaveFile;
-            undoButton.Click += (s, e) => { if (codeEditor.CanUndo) codeEditor.Undo(); };
-            redoButton.Click += (s, e) => { if (codeEditor.CanRedo) codeEditor.Redo(); };
+            undoButton.Click += (s, e) => codeEditor.Undo();
+            redoButton.Click += (s, e) => codeEditor.Redo();
             runButton.Click += RunCode_Click;
 
             fileButtons.Controls.Add(openButton);
@@ -89,7 +82,15 @@ namespace Wall_E
             fileButtons.Controls.Add(runButton);
             editorPanel.Controls.Add(fileButtons, 0, 0);
 
-            // Editor de código con resaltado de sintaxis.
+            // Panel para los números de línea
+            lineNumberPanel = new Panel
+            {
+                Width = 40,
+                Dock = DockStyle.Left,
+                BackColor = Color.LightGray
+            };
+
+            // Editor de código
             codeEditor = new RichTextBox
             {
                 Font = new Font("Consolas", 10),
@@ -98,8 +99,36 @@ namespace Wall_E
                 ScrollBars = RichTextBoxScrollBars.Vertical,
                 AcceptsTab = true
             };
-            codeEditor.TextChanged += (s, e) => ApplySyntaxHighlighting();
-            editorPanel.Controls.Add(codeEditor, 0, 1);
+
+            // Eventos para actualizar los números de línea
+            codeEditor.TextChanged += (s, e) => lineNumberPanel.Invalidate();
+            codeEditor.VScroll += (s, e) => lineNumberPanel.Invalidate();
+            codeEditor.Resize += (s, e) => lineNumberPanel.Invalidate();
+            codeEditor.Leave += (s, e) => ApplySyntaxHighlighting();
+
+            // Evento Paint para dibujar los números de línea
+            lineNumberPanel.Paint += (s, e) =>
+            {
+                int firstIndex = codeEditor.GetCharIndexFromPosition(new Point(0, 0));
+                int firstLine = codeEditor.GetLineFromCharIndex(firstIndex);
+
+                int lastIndex = codeEditor.GetCharIndexFromPosition(new Point(0, codeEditor.ClientSize.Height - 1));
+                int lastLine = codeEditor.GetLineFromCharIndex(lastIndex);
+
+                for (int i = firstLine; i <= lastLine + 1 && i < codeEditor.Lines.Length; i++)
+                {
+                    int y = codeEditor.GetPositionFromCharIndex(codeEditor.GetFirstCharIndexFromLine(i)).Y;
+                    e.Graphics.DrawString((i + 1).ToString(), codeEditor.Font, Brushes.Gray, 0, y);
+                }
+            };
+
+            // Contenedor para el editor y los números de línea
+            var editorContainer = new Panel { Dock = DockStyle.Fill };
+            // Agrega primero el editor y luego el panel de líneas para que el panel quede visible a la izquierda
+            editorContainer.Controls.Add(codeEditor);
+            editorContainer.Controls.Add(lineNumberPanel);
+
+            editorPanel.Controls.Add(editorContainer, 0, 1);
 
             // Panel derecho: Canvas y consola de errores.
             var rightPanel = new TableLayoutPanel
@@ -120,6 +149,7 @@ namespace Wall_E
                 Dock = DockStyle.Fill,
                 BackColor = Color.LightGray
             };
+
             pixelCanvas = new PixelCanvas(200, 200);
             canvasScroll.Controls.Add(pixelCanvas);
             rightPanel.Controls.Add(canvasScroll, 0, 0);
@@ -165,46 +195,51 @@ namespace Wall_E
         /// <summary>
         /// Ejecuta el código del editor, muestra errores y actualiza el canvas.
         /// </summary>
-        private void RunCode_Click(object? sender, EventArgs e)
+        private void RunCode_Click(object sender, EventArgs e)
         {
+            // Limpia la consola de errores y el canvas
             errorBox.Clear();
             pixelCanvas.Clear();
+            ErrorManager.Clear();
 
             try
             {
                 string input = codeEditor.Text;
-                Lexer lexer = new Lexer(input);
+                var lexer = new Lexer(input);
                 List<Token> tokens = lexer.Tokenize();
 
-                List<string> errors = new();
-                Parser parser = new Parser(tokens, errors);
-                List<ICode> codes = parser.Parse(errors);
+                var errors = new List<string>();
+                var parser = new Parser(tokens, errors);
+                var codes = parser.Parse(errors);
+
+                // Agrega errores de análisis al ErrorManager
+                foreach (var err in errors)
+                    ErrorManager.Add(err);
 
                 if (errors.Count > 0)
                 {
-                    errorBox.Text = string.Join(Environment.NewLine, errors);
+                    errorBox.Text = ErrorManager.GetAll();
                     return;
                 }
 
-                // Muestra errores de parser si hay
-                if (errors.Count > 0)
-                {
-                    foreach (string err in errors)
-                        errorBox.AppendText("[Parser Error] " + err + Environment.NewLine);
-                }
-                else
-                {
-                    Executor executor = new Executor(pixelCanvas);
-                    executor.Execute(codes);
-                }
+                var executor = new Executor(pixelCanvas, errors);
+                executor.Execute(codes);
+
+                // Agrega errores de ejecución al ErrorManager
+                foreach (var err in errors)
+                    ErrorManager.Add(err);
+
+                errorBox.Text = ErrorManager.GetAll();
             }
             catch (RuntimeError ex)
             {
-                errorBox.AppendText($"[Runtime Error] Línea {ex.Line}: {ex.Message}{Environment.NewLine}");
+                ErrorManager.Add($"[Runtime Error] Línea {ex.Line}: {ex.Message}");
+                errorBox.Text = ErrorManager.GetAll();
             }
             catch (Exception ex)
             {
-                errorBox.AppendText($"[Internal Error] {ex.Message}{Environment.NewLine}");
+                ErrorManager.Add($"[Internal Error] {ex.Message}");
+                errorBox.Text = ErrorManager.GetAll();
             }
         }
 
@@ -215,9 +250,9 @@ namespace Wall_E
         /// <summary>
         /// Abre un archivo y carga su contenido en el editor.
         /// </summary>
-        private void OpenFile(object? sender, EventArgs e)
+        private void OpenFile(object sender, EventArgs e)
         {
-            using OpenFileDialog dialog = new OpenFileDialog
+            using var dialog = new OpenFileDialog
             {
                 Filter = "WLE Files (*.wle)|*.wle|All Files (*.*)|*.*"
             };
@@ -229,9 +264,9 @@ namespace Wall_E
         /// <summary>
         /// Guarda el contenido del editor en un archivo.
         /// </summary>
-        private void SaveFile(object? sender, EventArgs e)
+        private void SaveFile(object sender, EventArgs e)
         {
-            using SaveFileDialog dialog = new SaveFileDialog
+            using var dialog = new SaveFileDialog
             {
                 Filter = "WLE Files (*.wle)|*.wle|All Files (*.*)|*.*"
             };
@@ -262,24 +297,27 @@ namespace Wall_E
         /// </summary>
         private void ApplySyntaxHighlighting()
         {
-            int selectionStart = codeEditor.SelectionStart;
-            int selectionLength = codeEditor.SelectionLength;
+            int selStart = codeEditor.SelectionStart;
+            int selLength = codeEditor.SelectionLength;
 
             codeEditor.SuspendLayout();
 
+            // Guarda el color original de fondo y texto
+            Color defaultColor = Color.Black;
+
+            // Aplica color por defecto solo si es necesario
+            codeEditor.Select(0, codeEditor.Text.Length);
+            codeEditor.SelectionColor = defaultColor;
+
             string text = codeEditor.Text;
-            codeEditor.SelectAll();
-            codeEditor.SelectionColor = Color.Black;
 
             // Palabras clave del lenguaje.
             string[] keywords = { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "Goto" };
-            foreach (string kw in keywords)
-                HighlightWord(kw, Color.Blue);
+            foreach (string word in keywords) HighlightWord(word, Color.Blue);
 
             // Nombres de colores conocidos.
-            string[] colorNames = { "Red", "Green", "Blue", "Black", "White", "Gray", "Yellow", "Cyan", "Magenta" };
-            foreach (string color in colorNames)
-                HighlightWord(color, Color.DarkGreen);
+            string[] colorWords = { "Red", "Green", "Blue", "Black", "White", "Gray", "Yellow", "Cyan", "Magenta" };
+            foreach (string color in colorWords) HighlightWord(color, Color.DarkGreen);
 
             // Números.
             foreach (Match m in Regex.Matches(text, @"\b\d+\b"))
@@ -302,9 +340,9 @@ namespace Wall_E
                 codeEditor.SelectionColor = Color.DarkGray;
             }
 
-            codeEditor.SelectionStart = selectionStart;
-            codeEditor.SelectionLength = selectionLength;
-            codeEditor.SelectionColor = Color.Black;
+            // Restaura la selección original
+            codeEditor.Select(selStart, selLength);
+            codeEditor.SelectionColor = defaultColor;
 
             codeEditor.ResumeLayout();
         }
@@ -314,7 +352,7 @@ namespace Wall_E
         /// </summary>
         private void HighlightWord(string word, Color color)
         {
-            foreach (Match match in Regex.Matches(codeEditor.Text, $@"\b{word}\b"))
+            foreach (Match match in Regex.Matches(codeEditor.Text, $@"\b{Regex.Escape(word)}\b"))
             {
                 codeEditor.Select(match.Index, match.Length);
                 codeEditor.SelectionColor = color;

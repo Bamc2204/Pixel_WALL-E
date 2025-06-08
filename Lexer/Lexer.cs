@@ -219,19 +219,24 @@ namespace Wall_E
             { "IsCanvasColor", TokenType.IS_CANVAS_COLOR },
         };
 
-        /// <summary>
-        /// Determina si una palabra es palabra clave o identificador.
-        /// </summary>
-        /// <param name="word">Palabra a analizar.</param>
-        /// <returns>Token correspondiente.</returns>
         private Token KeywordOrIdentifier(string word)
         {
             if (Keywords.TryGetValue(word, out var type))
             {
                 return new Token(type, word, _line);
             }
-            // Si no es palabra clave, es un identificador.
-            return new Token(TokenType.IDENTIFIER, word, _line);
+            // Solo acepta identificadores válidos: empiezan por letra o '_', y el resto son letras, dígitos o '_'
+            if (char.IsLetter(word[0]) || word[0] == '_')
+            {
+                foreach (char c in word)
+                {
+                    if (!(char.IsLetterOrDigit(c) || c == '_'))
+                        return new Token(TokenType.UNKNOWN, word, _line);
+                }
+                return new Token(TokenType.IDENTIFIER, word, _line);
+            }
+            // Si no cumple, es UNKNOWN
+            return new Token(TokenType.UNKNOWN, word, _line);
         }
 
         #endregion
