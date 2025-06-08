@@ -197,7 +197,6 @@ namespace Wall_E
         /// </summary>
         private void RunCode_Click(object sender, EventArgs e)
         {
-            // Limpia la consola de errores y el canvas
             errorBox.Clear();
             pixelCanvas.Clear();
             ErrorManager.Clear();
@@ -212,34 +211,27 @@ namespace Wall_E
                 var parser = new Parser(tokens, errors);
                 var codes = parser.Parse(errors);
 
-                // Agrega errores de análisis al ErrorManager
-                foreach (var err in errors)
-                    ErrorManager.Add(err);
-
+                // Muestra los errores de análisis directamente
                 if (errors.Count > 0)
                 {
-                    errorBox.Text = ErrorManager.GetAll();
+                    errorBox.Text = string.Join(Environment.NewLine, errors);
                     return;
                 }
 
                 var executor = new Executor(pixelCanvas, errors);
                 executor.Execute(codes);
 
-                // Agrega errores de ejecución al ErrorManager
-                foreach (var err in errors)
-                    ErrorManager.Add(err);
-
-                errorBox.Text = ErrorManager.GetAll();
+                // Muestra los errores de ejecución si los hay
+                if (errors.Count > 0)
+                    errorBox.Text = string.Join(Environment.NewLine, errors);
             }
             catch (RuntimeError ex)
             {
-                ErrorManager.Add($"[Runtime Error] Línea {ex.Line}: {ex.Message}");
-                errorBox.Text = ErrorManager.GetAll();
+                errorBox.Text = $"[Runtime Error] Línea {ex.Line}: {ex.Message}";
             }
             catch (Exception ex)
             {
-                ErrorManager.Add($"[Internal Error] {ex.Message}");
-                errorBox.Text = ErrorManager.GetAll();
+                errorBox.Text = $"[Internal Error] {ex.Message}";
             }
         }
 

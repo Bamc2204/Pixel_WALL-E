@@ -50,6 +50,7 @@ namespace Wall_E
                     // --- CONTROL DE TOKENS DESCONOCIDOS ---
                     if (Peek().Type == TokenType.UNKNOWN)
                     {
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] Token desconocido: '{Peek().Lexeme}' en línea {Peek().Line}");
                         // Lanza una excepción personalizada
                         throw new InvalidCommandError(
                             Peek().Lexeme,
@@ -103,6 +104,7 @@ namespace Wall_E
                 case TokenType.IDENTIFIER:
                     // Si el siguiente token es una asignación, parsea como asignación.
                     if (CheckNext(TokenType.ASSIGN)) return ParseAssignment();
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Identificador fuera de contexto: '{token.Lexeme}' en línea {token.Line}");
                     throw new InvalidCommandError(token.Lexeme, $"Instrucción no válida: '{token.Lexeme}'", token.Line);
                 default:
                     throw new InvalidCommandError(token.Lexeme, $"Instrucción no válida: '{token.Lexeme}'", token.Line);
