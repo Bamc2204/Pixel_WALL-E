@@ -25,6 +25,10 @@ namespace Wall_E
         private TextBox wall_EConsole = null!;
         // Splitter principal de la ventana.
         private SplitContainer mainSplit = null!;
+        // ListBox para sugerencias de autocompletado.
+        private ListBox suggestionBox = null!;
+        // Helper para autocompletado inteligente.
+        private SmartEditorHelper _smartEditorHelper = null!;
 
         #endregion
 
@@ -36,6 +40,13 @@ namespace Wall_E
         public MainForm()
         {
             InitializeComponent();
+
+            // Lista de palabras clave y colores para autocompletado
+            var keywords = new List<string> { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "Goto" };
+            var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Gray", "Yellow", "Cyan", "Magenta" };
+
+            // Inicializa el helper de autocompletado
+            _smartEditorHelper = new SmartEditorHelper(codeEditor, suggestionBox, keywords, colors);
         }
 
         #endregion
@@ -115,6 +126,15 @@ namespace Wall_E
                 AcceptsTab = true
             };
 
+            // ListBox para sugerencias de autocompletado
+            suggestionBox = new ListBox
+            {
+                Visible = false,
+                Font = codeEditor.Font,
+                Height = 100,
+                Width = 200
+            };
+
             // Eventos para actualizar los números de línea
             codeEditor.TextChanged += (s, e) => lineNumberPanel.Invalidate();
             codeEditor.VScroll += (s, e) => lineNumberPanel.Invalidate();
@@ -142,6 +162,7 @@ namespace Wall_E
             // Agrega primero el editor y luego el panel de líneas para que el panel quede visible a la izquierda
             editorContainer.Controls.Add(codeEditor);
             editorContainer.Controls.Add(lineNumberPanel);
+            editorContainer.Controls.Add(suggestionBox); // Agrega el ListBox de sugerencias
 
             editorPanel.Controls.Add(editorContainer, 0, 1);
 

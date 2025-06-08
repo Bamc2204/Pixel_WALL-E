@@ -320,7 +320,7 @@ namespace Wall_E
                     int y = cy + dy;
 
                     if (!IsInBounds(x, y))
-                        throw new CanvasOutOfBoundsError(x, y, _cols, _rows, _pixelSize);
+                        continue;
 
                     _pixels[x, y] = color.ToArgb();
                 }
