@@ -146,16 +146,29 @@ namespace Wall_E
                 case BinaryExpr b:
                     int left = Convert.ToInt32(EvaluateExpression(b.Left));
                     int right = Convert.ToInt32(EvaluateExpression(b.Right));
+
                     return b.Operator switch
                     {
                         "+" => left + right,
                         "-" => left - right,
                         "*" => left * right,
-                        "/" => right != 0 ? left / right : throw new DivisionByZeroError("División por cero", "El divisor es cero", expr.Line),
+                        "/" => right != 0 ? left / right : throw new DivisionByZeroError(
+                                    "División por cero", "El divisor es cero", expr.Line),
                         "%" => left % right,
                         "**" => (int)Math.Pow(left, right),
-                        _ => throw new InvalidArgumentError($"Operador desconocido: {b.Operator}", "No se reconoce el operador", expr.Line)
+
+                        // ✅ Nuevos operadores relacionales:
+                        "==" => left == right ? 1 : 0,
+                        "!=" => left != right ? 1 : 0,
+                        "<" => left < right ? 1 : 0,
+                        "<=" => left <= right ? 1 : 0,
+                        ">" => left > right ? 1 : 0,
+                        ">=" => left >= right ? 1 : 0,
+
+                        _ => throw new InvalidArgumentError(
+                            $"Operador desconocido: {b.Operator}", "No se reconoce el operador", expr.Line)
                     };
+
 
                 case FunctionCallExpr f:
                     return EvaluateFunction(f);

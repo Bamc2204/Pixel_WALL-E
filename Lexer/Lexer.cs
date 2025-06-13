@@ -69,7 +69,9 @@ namespace Wall_E
                     // Si cumple las reglas de etiqueta y está sola en la línea, es LABEL_DEF
                     if (IsValidLabel(word) && _newLineJustPassed && IsLabelAloneOnLine())
                     {
+                        System.Windows.Forms.MessageBox.Show(IsValidLabel(word) + " " + _newLineJustPassed + " " + IsLabelAloneOnLine()); 
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
+                        System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token 'GoTo' creado: Tipo={tokenAux.Type}, Lexema='{tokenAux.Lexeme}', Línea={tokenAux.Line}");
                     }
                     else
                     {
@@ -112,6 +114,11 @@ namespace Wall_E
                 Token token = RecognizeSymbolOrOperator(c);
                 tokens.Add(token);
                 _newLineJustPassed = false;
+                /*
+                Token newToken = new Token(token.Type, token.Lexeme, _line);
+                tokens.Add(newToken);
+                System.Windows.Forms.MessageBox.Show($"Token: {newToken.Type} - '{newToken.Lexeme}' en línea {newToken.Line}");
+                */
             }
 
             // Token de fin de archivo
@@ -285,32 +292,31 @@ namespace Wall_E
         #region LabelRecognitionHelpers
 
         /// <summary>
-        /// Valida si una palabra cumple las reglas para ser etiqueta:
-        /// - No puede empezar por número ni por '_'
-        /// - Debe tener al menos una letra y al menos un guion bajo
-        /// - Solo puede contener letras, dígitos y guion bajo
+        /// Verifica si una palabra es válida como nombre de etiqueta.
+        /// Debe comenzar con una letra o guion bajo, y puede contener letras, dígitos o guiones bajos.
         /// </summary>
         private bool IsValidLabel(string word)
         {
-            if (word.Length == 0 || char.IsDigit(word[0]) || word[0] == '_')
+            if (string.IsNullOrWhiteSpace(word))
                 return false;
 
-            bool hasLetter = false;
-            bool hasUnderscore = false;
+            //  Rechazar si es palabra clave
+            if (Keywords.ContainsKey(word))
+                return false;
+
+            if (!char.IsLetter(word[0]) && word[0] != '_')
+                return false;
 
             foreach (char c in word)
             {
-                if (char.IsLetter(c))
-                    hasLetter = true;
-                else if (c == '_')
-                    hasUnderscore = true;
-                else if (!char.IsDigit(c))
-                    return false; // Solo letras, dígitos y guion bajo permitidos
+                if (!char.IsLetterOrDigit(c) && c != '_')
+                    return false;
             }
 
-            // Debe tener al menos una letra
-            return hasLetter || hasUnderscore;
+            return true;
         }
+
+
 
         /// <summary>
         /// Verifica si la palabra está sola en la línea (solo espacios después).

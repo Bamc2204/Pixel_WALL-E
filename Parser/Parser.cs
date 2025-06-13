@@ -13,11 +13,13 @@ namespace Wall_E
     {
         #region Fields
 
-        // Lista de tokens a analizar.
+        // Lista de tokens a procesar
         private readonly List<Token> _tokens;
-        // Índice del token actual.
+
+        // Índice del token actual
         private int _current = 0;
-        // Lista de errores encontrados durante el parseo.
+
+        // Lista compartida donde se almacenan los errores
         private readonly List<string> _errors;
 
         #endregion
@@ -25,7 +27,7 @@ namespace Wall_E
         #region Constructor
 
         /// <summary>
-        /// Inicializa el parser con la lista de tokens y la lista de errores.
+        /// Constructor del parser que recibe la lista de tokens y la lista de errores compartida.
         /// </summary>
         public Parser(List<Token> tokens, List<string> errors)
         {
@@ -38,23 +40,22 @@ namespace Wall_E
         #region MainParseMethod
 
         /// <summary>
-        /// Método principal: recorre la lista de tokens y genera la lista de comandos ejecutables.
-        /// Maneja errores de sintaxis y tokens desconocidos.
+        /// Método principal de análisis sintáctico. Procesa todos los tokens y construye los comandos.
         /// </summary>
         public List<ICode> Parse(List<string> errors)
         {
             List<ICode> codes = new();
+
             while (!IsAtEnd())
             {
                 try
                 {
-                    // Ignora saltos de línea.
+                    // Ignora saltos de línea
                     if (Match(TokenType.NEWLINE)) continue;
 
-                    // Control de tokens desconocidos.
+                    // Si encuentra un token desconocido, lanza error
                     if (Peek().Type == TokenType.UNKNOWN)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[DEBUG] Token desconocido: '{Peek().Lexeme}' en línea {Peek().Line}");
                         throw new InvalidCommandError(
                             Peek().Lexeme,
                             $"Argumento o instrucción no válida: '{Peek().Lexeme}'",
@@ -62,21 +63,22 @@ namespace Wall_E
                         );
                     }
 
-                    // Intenta parsear un comando.
+                    // Intenta parsear un comando válido
                     ICode? code = ParseCode();
                     if (code != null) codes.Add(code);
                 }
                 catch (RuntimeError ex)
                 {
-                    errors.Add($"[Parser Error] Línea {ex.Line}: {ex.Message}");
+                    _errors.Add($"[Parser Error] Línea {ex.Line}: {ex.Message}");
                     Advance();
                 }
                 catch (Exception ex)
                 {
-                    errors.Add($"[Parser Error] Línea {Peek().Line}: {ex.Message}");
+                    _errors.Add($"[Parser Error] Línea {Peek().Line}: {ex.Message}");
                     Advance();
                 }
             }
+
             return codes;
         }
 
@@ -85,11 +87,12 @@ namespace Wall_E
         #region CommandParsing
 
         /// <summary>
-        /// Determina el tipo de comando a parsear según el token actual.
+        /// Detecta y procesa un tipo de comando específico según el token actual.
         /// </summary>
         private ICode? ParseCode()
         {
             Token token = Peek();
+
             switch (token.Type)
             {
                 case TokenType.SPAWN: return ParseGeneric<SpawnCommand>();
@@ -99,14 +102,12 @@ namespace Wall_E
                 case TokenType.DRAW_CIRCLE: return ParseGeneric<DrawCircleCommand>();
                 case TokenType.DRAW_RECTANGLE: return ParseGeneric<DrawRectangleCommand>();
                 case TokenType.FILL: return ParseGeneric<FillCommand>();
-                case TokenType.LABEL_DEF: // Definición de etiqueta
+                case TokenType.LABEL_DEF:
                     return new LabelCommand { Name = Advance().Lexeme, Line = token.Line };
-                case TokenType.GOTO: // Comando Goto
+                case TokenType.GOTO:
                     return ParseGoto();
                 case TokenType.IDENTIFIER:
-                    // Si el siguiente token es una asignación, parsea como asignación.
                     if (CheckNext(TokenType.ASSIGN)) return ParseAssignment();
-                    //System.Windows.Forms.MessageBox.Show($"Identificador fuera de contexto: '{token.Lexeme}' en línea {token.Line}");
                     throw new InvalidCommandError(token.Lexeme, $"Instrucción no válida: '{token.Lexeme}'", token.Line);
                 default:
                     throw new InvalidCommandError(token.Lexeme, $"Instrucción no válida: '{token.Lexeme}'", token.Line);
@@ -114,7 +115,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Parsea un comando de asignación (ejemplo: x <- 5).
+        /// Parsea una instrucción de asignación de variable.
         /// </summary>
         private ICode ParseAssignment()
         {
@@ -127,31 +128,36 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Parsea un comando Goto con su etiqueta y condición.
+        /// Parsea una instrucción Goto con su condición.
         /// </summary>
         private ICode ParseGoto()
         {
             Token token = Advance();
             int line = token.Line;
-            Consume(TokenType.LBRACKET, "Falta '[' después de 'Goto'");
-            Token label = Consume(TokenType.IDENTIFIER, "Se esperaba el nombre de la etiqueta");
-            Consume(TokenType.RBRACKET, "Falta ']' después del nombre de la etiqueta");
-            Consume(TokenType.LPAREN, "Falta '(' para la condición");
 
-            // Parsea la condición como una expresión.
+            if (IsAtEnd()) throw new Exception("Falta '[' después de 'Goto'");
+            if (!Match(TokenType.LBRACKET)) throw new Exception("Falta '[' después de 'Goto'");
+            if (!Match(TokenType.IDENTIFIER)) throw new Exception("Se esperaba el nombre de la etiqueta");
+
+            string label = Previous().Lexeme;
+
+            if (!Match(TokenType.RBRACKET)) throw new Exception("Falta ']' después del nombre de la etiqueta");
+            if (!Match(TokenType.LPAREN)) throw new Exception("Falta '(' para la condición del Goto");
+
             Expr condition = ParseExpression();
-            Consume(TokenType.RPAREN, "Falta ')' al final de la condición");
+
+            if (!Match(TokenType.RPAREN)) throw new Exception("Falta ')' al final de la condición");
 
             return new GotoCommand
             {
-                TargetLabel = label.Lexeme,
+                TargetLabel = label,
                 Condition = condition,
                 Line = line
             };
         }
 
         /// <summary>
-        /// Parsea comandos gráficos genéricos usando reflexión.
+        /// Parsea comandos gráficos genéricos.
         /// </summary>
         private ICode ParseGeneric<T>() where T : GraphicCommand, new()
         {
@@ -172,12 +178,29 @@ namespace Wall_E
         #region ExpressionParsing
 
         /// <summary>
-        /// Parsea una expresión completa.
+        /// Parsea una expresión general.
         /// </summary>
-        private Expr ParseExpression() => ParseAddSubtract();
+        private Expr ParseExpression() => ParseComparison();
 
         /// <summary>
-        /// Parsea sumas y restas.
+        /// Parsea expresiones con comparaciones (==, <, >, <=, >=).
+        /// </summary>
+        private Expr ParseComparison()
+        {
+            Expr expr = ParseAddSubtract();
+            while (Match(TokenType.LESS) || Match(TokenType.LESS_EQUAL) ||
+                Match(TokenType.GREATER) || Match(TokenType.GREATER_EQUAL) ||
+                Match(TokenType.EQUAL))
+            {
+                string op = Previous().Lexeme;
+                Expr right = ParseAddSubtract();
+                expr = new BinaryExpr { Operator = op, Left = expr, Right = right, Line = expr.Line };
+            }
+            return expr;
+        }
+
+        /// <summary>
+        /// Parsea operaciones de suma y resta.
         /// </summary>
         private Expr ParseAddSubtract()
         {
@@ -192,7 +215,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Parsea multiplicaciones, divisiones, módulos y potencias.
+        /// Parsea multiplicación, división, módulo y potencia.
         /// </summary>
         private Expr ParseMultiply()
         {
@@ -207,7 +230,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Parsea expresiones primarias: números, cadenas e identificadores.
+        /// Parsea una expresión primaria como números, cadenas o variables.
         /// </summary>
         private Expr ParsePrimary()
         {
@@ -223,42 +246,42 @@ namespace Wall_E
         #region TokenNavigationHelpers
 
         /// <summary>
-        /// Avanza si el token actual es del tipo esperado.
+        /// Consume un token si es del tipo especificado.
         /// </summary>
         private bool Match(TokenType type) => Check(type) && Advance() != null;
 
         /// <summary>
-        /// Verifica si el token actual es del tipo esperado.
+        /// Comprueba si el token actual es del tipo esperado.
         /// </summary>
         private bool Check(TokenType type) => !IsAtEnd() && Peek().Type == type;
 
         /// <summary>
-        /// Avanza al siguiente token y lo devuelve.
+        /// Avanza al siguiente token y lo retorna.
         /// </summary>
         private Token Advance() => _tokens[_current++];
 
         /// <summary>
-        /// Devuelve el token actual sin avanzar.
+        /// Retorna el token actual.
         /// </summary>
         private Token Peek() => _tokens[_current];
 
         /// <summary>
-        /// Devuelve el token anterior.
+        /// Retorna el token anterior.
         /// </summary>
         private Token Previous() => _tokens[_current - 1];
 
         /// <summary>
-        /// Verifica si se llegó al final de la lista de tokens.
+        /// Verifica si se ha llegado al final de la lista de tokens.
         /// </summary>
         private bool IsAtEnd() => Peek().Type == TokenType.EOF;
 
         /// <summary>
-        /// Verifica si el siguiente token es del tipo esperado.
+        /// Verifica el tipo del siguiente token (no el actual).
         /// </summary>
         private bool CheckNext(TokenType type) => _current + 1 < _tokens.Count && _tokens[_current + 1].Type == type;
 
         /// <summary>
-        /// Consume el token esperado o lanza una excepción si no es el tipo correcto.
+        /// Avanza si el token actual es del tipo esperado, si no lanza excepción.
         /// </summary>
         private Token Consume(TokenType type, string message)
         {
