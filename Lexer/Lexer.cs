@@ -308,8 +308,8 @@ namespace Wall_E
                     return false; // Solo letras, dígitos y guion bajo permitidos
             }
 
-            // Debe tener al menos una letra y al menos un guion bajo
-            return hasLetter && hasUnderscore;
+            // Debe tener al menos una letra
+            return hasLetter || hasUnderscore;
         }
 
         /// <summary>
