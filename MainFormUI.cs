@@ -29,6 +29,7 @@ namespace Wall_E
         private ListBox suggestionBox = null!;
         // Helper para autocompletado inteligente.
         private SmartEditorHelper _smartEditorHelper = null!;
+        private RichTextBox ghostEditor = null!;
 
         #endregion
 
@@ -46,7 +47,7 @@ namespace Wall_E
             var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Gray", "Yellow", "Cyan", "Magenta" };
 
             // Inicializa el helper de autocompletado
-            _smartEditorHelper = new SmartEditorHelper(codeEditor, suggestionBox, keywords, colors);
+            _smartEditorHelper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionBox, keywords, colors);
         }
 
         #endregion
@@ -123,8 +124,38 @@ namespace Wall_E
                 Dock = DockStyle.Fill,
                 Multiline = true,
                 ScrollBars = RichTextBoxScrollBars.Vertical,
-                AcceptsTab = true
+                AcceptsTab = true,
+                BorderStyle = BorderStyle.None
             };
+
+            // Editor fantasma para autocompletado en gris claro
+            ghostEditor = new RichTextBox
+            {
+                Font = codeEditor.Font,
+                Dock = DockStyle.Fill,
+                Multiline = true,
+                ReadOnly = true,
+                BackColor = Color.White,
+                ForeColor = Color.LightGray,
+                BorderStyle = BorderStyle.None,
+                Enabled = false
+            };
+
+            // Contenedor para superponer ambos editores
+            var editorOverlay = new Panel { Dock = DockStyle.Fill };
+            editorOverlay.Controls.Add(ghostEditor);
+            editorOverlay.Controls.Add(codeEditor);
+            codeEditor.BringToFront(); // Asegura que el editor real esté encima
+
+            // Panel con los números de línea a la izquierda
+            var editorContainer = new Panel { Dock = DockStyle.Fill };
+            editorContainer.Controls.Add(editorOverlay);
+            editorContainer.Controls.Add(lineNumberPanel);
+            editorContainer.Controls.Add(suggestionBox); // ListBox de sugerencias
+
+            editorPanel.Controls.Add(editorContainer, 0, 1);
+
+
 
             // ListBox para sugerencias de autocompletado
             suggestionBox = new ListBox
@@ -157,14 +188,12 @@ namespace Wall_E
                 }
             };
 
-            // Contenedor para el editor y los números de línea
-            var editorContainer = new Panel { Dock = DockStyle.Fill };
-            // Agrega primero el editor y luego el panel de líneas para que el panel quede visible a la izquierda
-            editorContainer.Controls.Add(codeEditor);
-            editorContainer.Controls.Add(lineNumberPanel);
-            editorContainer.Controls.Add(suggestionBox); // Agrega el ListBox de sugerencias
+            var editorContainerWithOverlay = new Panel { Dock = DockStyle.Fill };
+            editorContainerWithOverlay.Controls.Add(editorOverlay);
+            editorContainerWithOverlay.Controls.Add(lineNumberPanel);
+            editorContainerWithOverlay.Controls.Add(suggestionBox);
+            editorPanel.Controls.Add(editorContainerWithOverlay, 0, 1);
 
-            editorPanel.Controls.Add(editorContainer, 0, 1);
 
             // Panel derecho: Canvas y consola de errores.
             var rightPanel = new TableLayoutPanel
@@ -222,6 +251,18 @@ namespace Wall_E
                 Font = new Font("Consolas", 9)
             };
             rightPanel.Controls.Add(wall_EConsole, 0, 2);
+
+            // Palabras clave y colores conocidos para autocompletado
+            var keywords = new List<string> { "spawn", "drawline", "color", "size", "goto", "label", "fill", "drawcircle", "drawrectangle", "if", "else", "end" };
+            var colors = new List<string> { "red", "green", "blue", "black", "white", "yellow", "gray", "purple", "cyan" };
+
+            // Crear un nuevo SmartEditorHelper
+            var _smartEditorHelper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionBox, keywords, colors);
+
+            codeEditor.KeyDown += _smartEditorHelper.Editor_KeyDown;
+            codeEditor.KeyUp += _smartEditorHelper.Editor_KeyUp;
+            codeEditor.TextChanged += _smartEditorHelper.Editor_TextChanged;
+
         }
 
         #endregion
