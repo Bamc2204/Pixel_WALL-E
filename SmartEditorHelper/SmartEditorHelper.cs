@@ -13,49 +13,54 @@ namespace Wall_E
     {
         #region CamposPrivados
 
-        // Referencia al control RichTextBox que actúa como editor de código.
+        // Editor de texto principal donde se escribe el código
         private readonly RichTextBox _editor;
-        // ListBox que muestra las sugerencias de autocompletado.
+        // Cuadro de lista que muestra sugerencias de autocompletado
         private readonly ListBox _suggestionBox;
-        // Lista de palabras clave del lenguaje.
+        // Lista de palabras clave válidas
         private readonly List<string> _keywords;
-        // Lista de nombres de colores soportados.
+        // Lista de nombres de colores válidos
         private readonly List<string> _colors;
+        // Tooltip para mostrar descripciones al pasar el cursor
+        private readonly ToolTip _toolTip;
 
         #endregion
 
         #region Constructor
 
         /// <summary>
-        /// Inicializa el helper de autocompletado con los controles y listas de sugerencias.
+        /// Inicializa una nueva instancia de la clase SmartEditorHelper.
         /// </summary>
-        /// <param name="editor">RichTextBox del editor de código.</param>
-        /// <param name="suggestionBox">ListBox para mostrar sugerencias.</param>
-        /// <param name="keywords">Palabras clave del lenguaje.</param>
-        /// <param name="colors">Colores soportados.</param>
+        /// <param name="editor">El editor de texto RichTextBox asociado.</param>
+        /// <param name="suggestionBox">El ListBox que mostrará las sugerencias.</param>
+        /// <param name="keywords">Las palabras clave válidas.</param>
+        /// <param name="colors">Los nombres de colores válidos.</param>
         public SmartEditorHelper(RichTextBox editor, ListBox suggestionBox, IEnumerable<string> keywords, IEnumerable<string> colors)
         {
             _editor = editor;
             _suggestionBox = suggestionBox;
             _keywords = keywords.ToList();
             _colors = colors.ToList();
+            _toolTip = new ToolTip();
 
-            // Suscribe los eventos necesarios para autocompletado y selección de sugerencias.
+            // Suscripción a eventos del editor
             _editor.KeyUp += Editor_KeyUp;
+            _editor.KeyPress += Editor_KeyPress;
+            _editor.MouseMove += Editor_MouseMove;
+            // Suscripción a eventos del cuadro de sugerencias
             _suggestionBox.DoubleClick += SuggestionBox_DoubleClick;
             _suggestionBox.KeyDown += SuggestionBox_KeyDown;
         }
 
         #endregion
 
-        #region MétodosAutocompletado
+        #region EventosPrincipales
 
         /// <summary>
-        /// Evento que se dispara al soltar una tecla en el editor. Muestra sugerencias si corresponde.
+        /// Maneja el evento KeyUp del editor para mostrar sugerencias cuando se escribe.
         /// </summary>
         private void Editor_KeyUp(object? sender, KeyEventArgs e)
         {
-            // Solo sugerir si se está escribiendo texto
             if (char.IsLetter((char)e.KeyCode) || e.KeyCode == Keys.Back)
             {
                 int pos = _editor.SelectionStart;
@@ -84,7 +89,53 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Evento que se dispara al hacer doble clic en una sugerencia.
+        /// Maneja el evento KeyPress para insertar automáticamente pares de símbolos.
+        /// </summary>
+        private void Editor_KeyPress(object? sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == '(')
+            {
+                InsertAutoClose("()");
+                e.Handled = true;
+            }
+            else if (e.KeyChar == '[')
+            {
+                InsertAutoClose("[]");
+                e.Handled = true;
+            }
+            else if (e.KeyChar == '"')
+            {
+                InsertAutoClose("\"\"");
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// Muestra un tooltip con la descripción de la palabra sobre la que está el cursor.
+        /// </summary>
+        private void Editor_MouseMove(object? sender, MouseEventArgs e)
+        {
+            int index = _editor.GetCharIndexFromPosition(e.Location);
+            if (index >= 0 && index < _editor.Text.Length)
+            {
+                string hoveredWord = GetWordAt(index);
+                if (!string.IsNullOrEmpty(hoveredWord))
+                {
+                    string? desc = GetDescription(hoveredWord);
+                    if (desc != null)
+                    {
+                        _toolTip.SetToolTip(_editor, desc);
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region Sugerencias
+
+        /// <summary>
+        /// Inserta la sugerencia seleccionada al hacer doble clic en la lista.
         /// </summary>
         private void SuggestionBox_DoubleClick(object? sender, EventArgs e)
         {
@@ -92,7 +143,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Evento que se dispara al presionar una tecla en la lista de sugerencias.
+        /// Inserta la sugerencia seleccionada al presionar Enter en la lista.
         /// </summary>
         private void SuggestionBox_KeyDown(object? sender, KeyEventArgs e)
         {
@@ -104,7 +155,7 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Inserta la sugerencia seleccionada en el editor.
+        /// Inserta la sugerencia elegida en el editor en la posición correspondiente.
         /// </summary>
         private void InsertSuggestion()
         {
@@ -115,9 +166,64 @@ namespace Wall_E
                 string[] parts = text.Split(new[] { ' ', '\n', '\r', '(', '[', ',' }, StringSplitOptions.RemoveEmptyEntries);
                 string lastWord = parts.Length > 0 ? parts[^1] : "";
                 _editor.Select(pos - lastWord.Length, lastWord.Length);
-                _editor.SelectedText = suggestion;
+
+                if (_keywords.Contains(suggestion))
+                {
+                    _editor.SelectedText = suggestion + "()";
+                    _editor.SelectionStart--;
+                }
+                else
+                {
+                    _editor.SelectedText = suggestion;
+                }
                 _suggestionBox.Visible = false;
             }
+        }
+
+        #endregion
+
+        #region Utilidades
+
+        /// <summary>
+        /// Inserta automáticamente el par de cierre para un carácter abierto.
+        /// </summary>
+        private void InsertAutoClose(string pair)
+        {
+            int pos = _editor.SelectionStart;
+            _editor.SelectedText = pair;
+            _editor.SelectionStart = pos + 1;
+        }
+
+        /// <summary>
+        /// Obtiene la palabra completa en la posición de índice especificada del texto.
+        /// </summary>
+        private string GetWordAt(int index)
+        {
+            if (index < 0 || index >= _editor.Text.Length) return "";
+            int start = index;
+            int end = index;
+            while (start > 0 && char.IsLetterOrDigit(_editor.Text[start - 1])) start--;
+            while (end < _editor.Text.Length && char.IsLetterOrDigit(_editor.Text[end])) end++;
+            return _editor.Text.Substring(start, end - start);
+        }
+
+        /// <summary>
+        /// Devuelve una descripción asociada a la palabra especificada, si existe.
+        /// </summary>
+        private string? GetDescription(string word)
+        {
+            return word switch
+            {
+                "Spawn" => "Spawn(int x, int y): Posiciona a Wall-E.",
+                "Color" => "Color(string name): Cambia el color del pincel.",
+                "Size" => "Size(int value): Cambia el tamaño del pincel.",
+                "DrawLine" => "DrawLine(int dx, int dy, int distance): Dibuja una línea.",
+                "DrawCircle" => "DrawCircle(int dx, int dy, int radius): Dibuja un círculo.",
+                "DrawRectangle" => "DrawRectangle(int dx, int dy, int distance, int width, int height): Dibuja un rectángulo.",
+                "Fill" => "Fill(): Rellena la región actual.",
+                "Goto" => "Goto[label](condition): Salta a una etiqueta si se cumple la condición.",
+                _ => null
+            };
         }
 
         #endregion
