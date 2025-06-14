@@ -135,18 +135,24 @@ namespace Wall_E
             Token token = Advance();
             int line = token.Line;
 
-            if (IsAtEnd()) throw new Exception("Falta '[' después de 'Goto'");
-            if (!Match(TokenType.LBRACKET)) throw new Exception("Falta '[' después de 'Goto'");
-            if (!Match(TokenType.IDENTIFIER)) throw new Exception("Se esperaba el nombre de la etiqueta");
+            if (!Match(TokenType.LBRACKET))
+                throw new Exception("Falta '[' después de 'Goto'");
+
+            if (!Match(TokenType.IDENTIFIER))
+                throw new Exception("Se esperaba el nombre de la etiqueta");
 
             string label = Previous().Lexeme;
 
-            if (!Match(TokenType.RBRACKET)) throw new Exception("Falta ']' después del nombre de la etiqueta");
-            if (!Match(TokenType.LPAREN)) throw new Exception("Falta '(' para la condición del Goto");
+            if (!Match(TokenType.RBRACKET))
+                throw new Exception("Falta ']' después del nombre de la etiqueta");
+
+            if (!Match(TokenType.LPAREN))
+                throw new Exception("Falta '(' para la condición del Goto");
 
             Expr condition = ParseExpression();
 
-            if (!Match(TokenType.RPAREN)) throw new Exception("Falta ')' al final de la condición");
+            if (!Match(TokenType.RPAREN))
+                throw new Exception("Falta ')' al final de la condición");
 
             return new GotoCommand
             {
@@ -155,6 +161,7 @@ namespace Wall_E
                 Line = line
             };
         }
+
 
         /// <summary>
         /// Parsea comandos gráficos genéricos.
@@ -180,17 +187,24 @@ namespace Wall_E
         /// <summary>
         /// Parsea una expresión general.
         /// </summary>
-        private Expr ParseExpression() => ParseComparison();
+        private Expr ParseExpression() => ParseEquality();
 
-        /// <summary>
-        /// Parsea expresiones con comparaciones (==, <, >, <=, >=).
-        /// </summary>
+        private Expr ParseEquality()
+        {
+            Expr expr = ParseComparison();
+            while (Match(TokenType.EQUAL))
+            {
+                string op = Previous().Lexeme;
+                Expr right = ParseComparison();
+                expr = new BinaryExpr { Operator = op, Left = expr, Right = right, Line = expr.Line };
+            }
+            return expr;
+        }
+
         private Expr ParseComparison()
         {
             Expr expr = ParseAddSubtract();
-            while (Match(TokenType.LESS) || Match(TokenType.LESS_EQUAL) ||
-                Match(TokenType.GREATER) || Match(TokenType.GREATER_EQUAL) ||
-                Match(TokenType.EQUAL))
+            while (Match(TokenType.LESS, TokenType.LESS_EQUAL, TokenType.GREATER, TokenType.GREATER_EQUAL))
             {
                 string op = Previous().Lexeme;
                 Expr right = ParseAddSubtract();
@@ -198,6 +212,7 @@ namespace Wall_E
             }
             return expr;
         }
+
 
         /// <summary>
         /// Parsea operaciones de suma y resta.
@@ -230,22 +245,25 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Parsea una expresión primaria como números, cadenas o variables.
+        /// Parsea expresiones primarias: números (positivos o negativos), strings, variables y funciones.
         /// </summary>
         private Expr ParsePrimary()
         {
             // Soporta números negativos
-            if (Match(TokenType.MINUS))
+            if (Match(TokenType.MINUS) && Check(TokenType.NUMBER))
             {
-                if (Match(TokenType.NUMBER))
-                {
-                    string value = "-" + Previous().Lexeme;
-                    return new LiteralExpr { Value = value, Line = Previous().Line };
-                }
-                else
-                {
-                    throw new InvalidCommandError("-", "Se esperaba un número después de '-'", Peek().Line);
-                }
+                Token minus = Previous();
+                Token number = Advance();
+                string value = "-" + number.Lexeme;
+                return new LiteralExpr { Value = value, Line = minus.Line };
+            }
+
+            // Soporta expresiones entre paréntesis
+            if (Match(TokenType.LPAREN))
+            {
+                Expr expr = ParseExpression();
+                Consume(TokenType.RPAREN, "Falta ')' al cerrar la expresión entre paréntesis");
+                return expr;
             }
 
             if (Match(TokenType.NUMBER))
@@ -254,11 +272,30 @@ namespace Wall_E
             if (Match(TokenType.STRING))
                 return new LiteralExpr { Value = $"\"{Previous().Lexeme}\"", Line = Previous().Line };
 
-            if (Match(TokenType.IDENTIFIER))
-                return new VariableExpr { Name = Previous().Lexeme, Line = Previous().Line };
+            if (Match(TokenType.IDENTIFIER) || Match(TokenType.IS_BRUSH_COLOR) || Match(TokenType.GET_ACTUAL_X)
+                || Match(TokenType.GET_ACTUAL_Y) || Match(TokenType.GET_CANVAS_SIZE) || Match(TokenType.GET_COLOR_COUNT)
+                || Match(TokenType.IS_BRUSH_SIZE) || Match(TokenType.IS_CANVAS_COLOR))
+            {
+                string name = Previous().Lexeme;
+                int line = Previous().Line;
+
+                if (Match(TokenType.LPAREN))
+                {
+                    List<Expr> args = new();
+                    if (!Check(TokenType.RPAREN))
+                    {
+                        do { args.Add(ParseExpression()); } while (Match(TokenType.COMMA));
+                    }
+                    Consume(TokenType.RPAREN, "Falta ')' al cerrar los argumentos de la función");
+                    return new FunctionCallExpr { FunctionName = name, Arguments = args, Line = line };
+                }
+
+                return new VariableExpr { Name = name, Line = line };
+            }
 
             throw new InvalidCommandError(Peek().Lexeme, $"Instrucción no válida: '{Peek().Lexeme}'", Peek().Line);
         }
+
 
         #endregion
 
@@ -268,6 +305,24 @@ namespace Wall_E
         /// Consume un token si es del tipo especificado.
         /// </summary>
         private bool Match(TokenType type) => Check(type) && Advance() != null;
+
+        /// <summary>
+        /// Devuelve true si el token actual coincide con alguno de los tipos proporcionados y avanza.
+        /// </summary>
+        /// <param name="types">Tipos de token que se esperan.</param>
+        private bool Match(params TokenType[] types)
+        {
+            foreach (var type in types)
+            {
+                if (Check(type))
+                {
+                    Advance();
+                    return true;
+                }
+            }
+            return false;
+        }
+
 
         /// <summary>
         /// Comprueba si el token actual es del tipo esperado.

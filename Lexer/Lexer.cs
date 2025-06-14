@@ -207,7 +207,7 @@ namespace Wall_E
             { "DrawCircle", TokenType.DRAW_CIRCLE },
             { "DrawRectangle", TokenType.DRAW_RECTANGLE },
             { "Fill", TokenType.FILL },
-            { "Goto", TokenType.GOTO },
+            { "GoTo", TokenType.GOTO },
 
             { "GetActualX", TokenType.GET_ACTUAL_X },
             { "GetActualY", TokenType.GET_ACTUAL_Y },
