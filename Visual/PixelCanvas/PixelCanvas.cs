@@ -168,46 +168,56 @@ namespace Wall_E
         }
 
         /// <summary>
-        /// Dibuja un círculo desde la posición actual del cursor.
+        /// Dibuja un círculo en la dirección indicada desde la posición actual.
         /// </summary>
-        public void DrawCircle(int radius, Color color, int size)
+        public void DrawCircle(int dirX, int dirY, int radius, Color color, int brushSize, int line)
         {
-            int cx = _cursorPosition.X;
-            int cy = _cursorPosition.Y;
+            int newX = _cursorPosition.X + dirX;
+            int newY = _cursorPosition.Y + dirY;
+
+            SetCursorPosition(newX, newY);
 
             for (int angle = 0; angle < 360; angle++)
             {
                 double rad = angle * Math.PI / 180;
-                int x = cx + (int)(radius * Math.Cos(rad));
-                int y = cy + (int)(radius * Math.Sin(rad));
-                DrawPoint(x, y, color, size);
+                int x = newX + (int)(radius * Math.Cos(rad));
+                int y = newY + (int)(radius * Math.Sin(rad));
+                DrawPoint(x, y, color, brushSize);
             }
 
             Invalidate();
         }
 
+
         /// <summary>
-        /// Dibuja un rectángulo desde la posición actual del cursor.
+        /// Dibuja un rectángulo en una dirección y distancia desde la posición actual.
         /// </summary>
-        public void DrawRectangle(int width, int height, Color color, int size)
+        public void DrawRectangle(int dirX, int dirY, int distance, int width, int height, Color color, int brushSize, int line)
         {
-            int x = _cursorPosition.X;
-            int y = _cursorPosition.Y;
+            int newX = _cursorPosition.X + dirX * distance;
+            int newY = _cursorPosition.Y + dirY * distance;
+
+            SetCursorPosition(newX, newY);
+
+            int left = newX - width / 2;
+            int top = newY - height / 2;
 
             for (int i = 0; i < width; i++)
             {
-                DrawPoint(x + i, y, color, size);
-                DrawPoint(x + i, y + height - 1, color, size);
+                DrawPoint(left + i, top, color, brushSize);
+                DrawPoint(left + i, top + height - 1, color, brushSize);
             }
 
             for (int j = 0; j < height; j++)
             {
-                DrawPoint(x, y + j, color, size);
-                DrawPoint(x + width - 1, y + j, color, size);
+                DrawPoint(left, top + j, color, brushSize);
+                DrawPoint(left + width - 1, top + j, color, brushSize);
             }
 
             Invalidate();
         }
+
+
 
         /// <summary>
         /// Rellena todo el canvas con el color especificado.

@@ -234,9 +234,28 @@ namespace Wall_E
         /// </summary>
         private Expr ParsePrimary()
         {
-            if (Match(TokenType.NUMBER)) return new LiteralExpr { Value = Previous().Lexeme, Line = Previous().Line };
-            if (Match(TokenType.STRING)) return new LiteralExpr { Value = $"\"{Previous().Lexeme}\"", Line = Previous().Line };
-            if (Match(TokenType.IDENTIFIER)) return new VariableExpr { Name = Previous().Lexeme, Line = Previous().Line };
+            // Soporta números negativos
+            if (Match(TokenType.MINUS))
+            {
+                if (Match(TokenType.NUMBER))
+                {
+                    string value = "-" + Previous().Lexeme;
+                    return new LiteralExpr { Value = value, Line = Previous().Line };
+                }
+                else
+                {
+                    throw new InvalidCommandError("-", "Se esperaba un número después de '-'", Peek().Line);
+                }
+            }
+
+            if (Match(TokenType.NUMBER))
+                return new LiteralExpr { Value = Previous().Lexeme, Line = Previous().Line };
+
+            if (Match(TokenType.STRING))
+                return new LiteralExpr { Value = $"\"{Previous().Lexeme}\"", Line = Previous().Line };
+
+            if (Match(TokenType.IDENTIFIER))
+                return new VariableExpr { Name = Previous().Lexeme, Line = Previous().Line };
 
             throw new InvalidCommandError(Peek().Lexeme, $"Instrucción no válida: '{Peek().Lexeme}'", Peek().Line);
         }

@@ -19,18 +19,14 @@ namespace Wall_E
         /// <param name="executor">Executor que gestiona el estado y la ejecución.</param>
         public override void Execute(Executor executor)
         {
-            // Verifica que haya exactamente 1 argumento (el radio).
-            if (Arguments.Count != 1)
-                throw new InvalidArgumentError("DrawCircle", "Se esperaba 1 argumento (radio).", Line);
+            if (Arguments.Count != 3)
+                throw new InvalidFunctionArityError("DrawCircle", 3, Arguments.Count, Line);
 
-            // Evalúa el argumento como radio.
-            int radius = Convert.ToInt32(executor.EvaluateExpression(Arguments[0]));
-            // Obtiene el color y tamaño actual del pincel.
-            Color color = executor.BrushColor;
-            int size = executor.BrushSize;
+            int dirX = (int)executor.EvaluateExpression(Arguments[0]);
+            int dirY = (int)executor.EvaluateExpression(Arguments[1]);
+            int radius = (int)executor.EvaluateExpression(Arguments[2]);
 
-            // Dibuja el círculo en el canvas.
-            executor.Canvas.DrawCircle(radius, color, size);
+            executor.Canvas.DrawCircle(dirX, dirY, radius, executor.BrushColor, executor.BrushSize, Line);
         }
 
         #endregion
