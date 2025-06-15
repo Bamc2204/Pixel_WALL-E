@@ -14,17 +14,12 @@ namespace Wall_E
     {
         #region CamposPrivados
 
-        // Editor de texto principal donde se escribe el código
         private readonly RichTextBox _editor;
-        // Cuadro de lista que muestra sugerencias de autocompletado
-        private readonly ListBox _suggestionBox;
-        // Lista de palabras clave válidas
-        private readonly List<string> _keywords;
-        // Lista de nombres de colores válidos
-        private readonly List<string> _colors;
-        // Tooltip para mostrar descripciones al pasar el cursor
-        private readonly ToolTip _toolTip;
         private readonly RichTextBox _ghostEditor;
+        private readonly ListBox _suggestionBox;
+        private readonly List<string> _keywords;
+        private readonly List<string> _colors;
+        private readonly ToolTip _toolTip;
 
         #endregion
 
@@ -33,10 +28,6 @@ namespace Wall_E
         /// <summary>
         /// Inicializa una nueva instancia de la clase SmartEditorHelper.
         /// </summary>
-        /// <param name="editor">El editor de texto RichTextBox asociado.</param>
-        /// <param name="suggestionBox">El ListBox que mostrará las sugerencias.</param>
-        /// <param name="keywords">Las palabras clave válidas.</param>
-        /// <param name="colors">Los nombres de colores válidos.</param>
         public SmartEditorHelper(RichTextBox editor, RichTextBox ghostEditor, ListBox suggestionBox, IEnumerable<string> keywords, IEnumerable<string> colors)
         {
             _editor = editor;
@@ -48,20 +39,18 @@ namespace Wall_E
 
             _editor.KeyUp += Editor_KeyUp;
             _editor.KeyPress += Editor_KeyPress;
-            _editor.KeyDown += Editor_KeyDown; // Añadimos esto para detectar Tab
+            _editor.KeyDown += Editor_KeyDown;
             _editor.MouseMove += Editor_MouseMove;
+            _editor.TextChanged += Editor_TextChanged;
+
             _suggestionBox.DoubleClick += SuggestionBox_DoubleClick;
             _suggestionBox.KeyDown += SuggestionBox_KeyDown;
         }
 
-
         #endregion
 
-        #region EventosPrincipales
+        #region EventosEditor
 
-        /// <summary>
-        /// Maneja el evento KeyUp del editor para mostrar sugerencias cuando se escribe.
-        /// </summary>
         public void Editor_KeyUp(object? sender, KeyEventArgs e)
         {
             if (char.IsLetter((char)e.KeyCode) || e.KeyCode == Keys.Back)
@@ -79,100 +68,98 @@ namespace Wall_E
                 {
                     _suggestionBox.DataSource = suggestions;
                     _suggestionBox.Visible = true;
+
+                    // NUEVO: Posicionar el ListBox debajo del cursor
+                    Point caretPos = _editor.GetPositionFromCharIndex(pos);
+                    caretPos = _editor.PointToScreen(caretPos); // Pasar a coordenadas de pantalla
+                    caretPos = _suggestionBox.Parent!.PointToClient(caretPos); // Convertir a coordenadas relativas al contenedor del ListBox
+                    caretPos.Offset(0, (int)Math.Ceiling(_editor.Font.GetHeight()));
+                    _suggestionBox.Location = caretPos;
+                    _suggestionBox.BringToFront();
                 }
                 else
                 {
                     _suggestionBox.Visible = false;
                 }
+
+                UpdateGhostText();
             }
             else if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Escape)
             {
                 _suggestionBox.Visible = false;
-            }
-            // Actualizar texto del ghostEditor para mostrar la sugerencia inline
-            if (char.IsLetter((char)e.KeyCode) || e.KeyCode == Keys.Back)
-            {
-                int pos = _editor.SelectionStart;
-                string text = _editor.Text.Substring(0, pos);
-                string[] parts = text.Split(new[] { ' ', '\n', '\r', '(', '[', ',' }, StringSplitOptions.RemoveEmptyEntries);
-                string lastWord = parts.Length > 0 ? parts[^1] : "";
-
-                var suggestions = _keywords.Concat(_colors)
-                    .Where(k => k.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-                if (suggestions.Count > 0 && lastWord.Length > 0)
-                {
-                    string firstSuggestion = suggestions[0];
-                    if (firstSuggestion.Length > lastWord.Length)
-                    {
-                        string remaining = firstSuggestion.Substring(lastWord.Length);
-                        _ghostEditor.Text = _editor.Text.Insert(pos, remaining);
-                    }
-                    else
-                    {
-                        _ghostEditor.Text = _editor.Text;
-                    }
-                }
-                else
-                {
-                    _ghostEditor.Text = _editor.Text;
-                }
+                _ghostEditor.Text = _editor.Text;
             }
             else
             {
-                _ghostEditor.Text = _editor.Text;
+                UpdateGhostText();
             }
         }
 
         public void Editor_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Tab)
+            if (_suggestionBox.Visible)
             {
-                int pos = _editor.SelectionStart;
-                string text = _editor.Text.Substring(0, pos);
-                string[] parts = text.Split(new[] { ' ', '\n', '\r', '(', '[', ',' }, StringSplitOptions.RemoveEmptyEntries);
-                string lastWord = parts.Length > 0 ? parts[^1] : "";
-
-                var match = _keywords.Concat(_colors)
-                    .FirstOrDefault(k => k.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase));
-
-                if (match != null && match.Length > lastWord.Length)
+                if (e.KeyCode == Keys.Down)
                 {
-                    _editor.Select(pos - lastWord.Length, lastWord.Length);
-                    _editor.SelectedText = match;
+                    _suggestionBox.Focus();
+                    if (_suggestionBox.SelectedIndex < _suggestionBox.Items.Count - 1)
+                        _suggestionBox.SelectedIndex++;
                     e.Handled = true;
-                    _ghostEditor.Text = _editor.Text;
+                }
+                else if (e.KeyCode == Keys.Up)
+                {
+                    _suggestionBox.Focus();
+                    if (_suggestionBox.SelectedIndex > 0)
+                        _suggestionBox.SelectedIndex--;
+                    e.Handled = true;
+                }
+                else if (e.KeyCode == Keys.Tab || e.KeyCode == Keys.Enter)
+                {
+                    InsertSuggestion();
+                    e.Handled = true;
+                }
+                else if (e.KeyCode == Keys.Escape)
+                {
+                    _suggestionBox.Visible = false;
                 }
             }
         }
 
-
-        /// <summary>
-        /// Maneja el evento KeyPress para insertar automáticamente pares de símbolos.
-        /// </summary>
         private void Editor_KeyPress(object? sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar == '(')
+            int pos = _editor.SelectionStart;
+
+            switch (e.KeyChar)
             {
-                InsertAutoClose("()");
-                e.Handled = true;
-            }
-            else if (e.KeyChar == '[')
-            {
-                InsertAutoClose("[]");
-                e.Handled = true;
-            }
-            else if (e.KeyChar == '"')
-            {
-                InsertAutoClose("\"\"");
-                e.Handled = true;
+                case '(':
+                    if (!NextCharIs(')')) InsertAutoClose("()");
+                    e.Handled = true;
+                    break;
+                case '[':
+                    if (!NextCharIs(']')) InsertAutoClose("[]");
+                    e.Handled = true;
+                    break;
+                case '{':
+                    if (!NextCharIs('}')) InsertAutoClose("{}");
+                    e.Handled = true;
+                    break;
+                case '"':
+                    if (!NextCharIs('"')) InsertAutoClose("\"\"");
+                    e.Handled = true;
+                    break;
+                case '\'':
+                    if (!NextCharIs('\'')) InsertAutoClose("''");
+                    e.Handled = true;
+                    break;
             }
         }
 
-        /// <summary>
-        /// Muestra un tooltip con la descripción de la palabra sobre la que está el cursor.
-        /// </summary>
+        private bool NextCharIs(char expected)
+        {
+            int pos = _editor.SelectionStart;
+            return pos < _editor.Text.Length && _editor.Text[pos] == expected;
+        }
+
         private void Editor_MouseMove(object? sender, MouseEventArgs e)
         {
             int index = _editor.GetCharIndexFromPosition(e.Location);
@@ -190,63 +177,74 @@ namespace Wall_E
             }
         }
 
+        public void Editor_TextChanged(object? sender, EventArgs e)
+        {
+            UpdateGhostText();
+        }
+
         #endregion
 
         #region Sugerencias
 
-        /// <summary>
-        /// Inserta la sugerencia seleccionada al hacer doble clic en la lista.
-        /// </summary>
         private void SuggestionBox_DoubleClick(object? sender, EventArgs e)
         {
             InsertSuggestion();
         }
 
-        /// <summary>
-        /// Inserta la sugerencia seleccionada al presionar Enter en la lista.
-        /// </summary>
         private void SuggestionBox_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
                 InsertSuggestion();
                 e.Handled = true;
+
+                _editor.Focus(); // <- vuelve al editor
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                _suggestionBox.Visible = false;
+                _editor.Focus();
+                e.Handled = true;
             }
         }
 
-        /// <summary>
-        /// Inserta la sugerencia elegida en el editor en la posición correspondiente.
-        /// </summary>
         private void InsertSuggestion()
         {
             if (_suggestionBox.SelectedItem is string suggestion)
             {
                 int pos = _editor.SelectionStart;
                 string text = _editor.Text.Substring(0, pos);
+
+                // Detecta la última palabra que se está escribiendo
                 string[] parts = text.Split(new[] { ' ', '\n', '\r', '(', '[', ',' }, StringSplitOptions.RemoveEmptyEntries);
                 string lastWord = parts.Length > 0 ? parts[^1] : "";
+
+                // Reemplaza solo la palabra escrita
                 _editor.Select(pos - lastWord.Length, lastWord.Length);
 
-                if (_keywords.Contains(suggestion))
+                // Agrega paréntesis solo si el carácter siguiente no es ')'
+                bool shouldInsertParentheses = pos >= _editor.Text.Length || _editor.Text[pos] != ')';
+
+                if (_keywords.Contains(suggestion) && shouldInsertParentheses)
                 {
                     _editor.SelectedText = suggestion + "()";
-                    _editor.SelectionStart--;
+                    _editor.SelectionStart -= 1; // Coloca el cursor dentro de los paréntesis
                 }
                 else
                 {
                     _editor.SelectedText = suggestion;
                 }
+
                 _suggestionBox.Visible = false;
+                _ghostEditor.Text = _editor.Text;
             }
         }
+
 
         #endregion
 
         #region Utilidades
 
-        /// <summary>
-        /// Inserta automáticamente el par de cierre para un carácter abierto.
-        /// </summary>
         private void InsertAutoClose(string pair)
         {
             int pos = _editor.SelectionStart;
@@ -254,9 +252,6 @@ namespace Wall_E
             _editor.SelectionStart = pos + 1;
         }
 
-        /// <summary>
-        /// Obtiene la palabra completa en la posición de índice especificada del texto.
-        /// </summary>
         private string GetWordAt(int index)
         {
             if (index < 0 || index >= _editor.Text.Length) return "";
@@ -267,9 +262,6 @@ namespace Wall_E
             return _editor.Text.Substring(start, end - start);
         }
 
-        /// <summary>
-        /// Devuelve una descripción asociada a la palabra especificada, si existe.
-        /// </summary>
         private string? GetDescription(string word)
         {
             return word switch
@@ -286,25 +278,14 @@ namespace Wall_E
             };
         }
 
-        public void Editor_TextChanged(object? sender, EventArgs e)
-        {
-            UpdateGhostText();
-        }
-
-        /// <summary>
-        /// Actualiza el contenido del ghostEditor para mostrar sugerencias inline en gris.
-        /// </summary>
         private void UpdateGhostText()
         {
-            // Obtiene el texto actual y la posición del cursor
             string text = _editor.Text;
             int pos = _editor.SelectionStart;
 
-            // Divide en palabras antes de la posición actual
             string[] parts = text.Substring(0, pos).Split(new[] { ' ', '\n', '\r', '(', '[', ',' }, StringSplitOptions.RemoveEmptyEntries);
             string lastWord = parts.Length > 0 ? parts[^1] : "";
 
-            // Busca sugerencias coincidentes
             var suggestions = _keywords.Concat(_colors)
                 .Where(k => k.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase))
                 .ToList();
@@ -312,23 +293,19 @@ namespace Wall_E
             if (suggestions.Count > 0 && lastWord.Length > 0)
             {
                 string suggestion = suggestions[0];
-                string suffix = suggestion.Substring(lastWord.Length); // Parte que falta
+                string suffix = suggestion.Substring(lastWord.Length);
 
-                // Construye texto gris
                 string ghostText = text.Insert(pos, suffix);
                 _ghostEditor.Text = ghostText;
 
-                // Copia formato de saltos de línea
                 _ghostEditor.Select(pos, suffix.Length);
                 _ghostEditor.SelectionColor = Color.LightGray;
             }
             else
             {
-                // Si no hay sugerencia, solo copia el texto actual
                 _ghostEditor.Text = text;
             }
         }
-
 
         #endregion
     }

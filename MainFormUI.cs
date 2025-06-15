@@ -59,20 +59,23 @@ namespace Wall_E
         /// </summary>
         private void InitializeComponent()
         {
+            #region Configuración de la ventana principal
             Text = "Pixel Wall-E IDE";
             Width = 1400;
             Height = 900;
             StartPosition = FormStartPosition.CenterScreen;
+            #endregion
 
-            // División principal vertical.
+            #region División principal
             mainSplit = new SplitContainer
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical
             };
             Controls.Add(mainSplit);
+            #endregion
 
-            // Panel izquierdo: Editor de código y botones.
+            #region Panel izquierdo - Editor de código y botones
             var editorPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -83,7 +86,7 @@ namespace Wall_E
             editorPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
             mainSplit.Panel1.Controls.Add(editorPanel);
 
-            // Botones de archivo y ejecución.
+            // Botones de archivo y ejecución
             var fileButtons = new FlowLayoutPanel
             {
                 FlowDirection = FlowDirection.LeftToRight,
@@ -108,8 +111,10 @@ namespace Wall_E
             fileButtons.Controls.Add(redoButton);
             fileButtons.Controls.Add(runButton);
             editorPanel.Controls.Add(fileButtons, 0, 0);
+            #endregion
 
-            // Panel para los números de línea
+            #region Editor principal, ghost y sugerencias
+            // Panel de números de línea
             lineNumberPanel = new Panel
             {
                 Width = 40,
@@ -117,7 +122,7 @@ namespace Wall_E
                 BackColor = Color.LightGray
             };
 
-            // Editor de código
+            // Editor real
             codeEditor = new RichTextBox
             {
                 Font = new Font("Consolas", 10),
@@ -128,7 +133,7 @@ namespace Wall_E
                 BorderStyle = BorderStyle.None
             };
 
-            // Editor fantasma para autocompletado en gris claro
+            // Editor fantasma
             ghostEditor = new RichTextBox
             {
                 Font = codeEditor.Font,
@@ -138,26 +143,22 @@ namespace Wall_E
                 BackColor = Color.White,
                 ForeColor = Color.LightGray,
                 BorderStyle = BorderStyle.None,
-                Enabled = false
+                Enabled = false,
+                TabStop = false,
+                ScrollBars = RichTextBoxScrollBars.None,
+                WordWrap = codeEditor.WordWrap,
+                Location = codeEditor.Location,
+                Text = ""
             };
 
-            // Contenedor para superponer ambos editores
+            // Superposición de editores
             var editorOverlay = new Panel { Dock = DockStyle.Fill };
             editorOverlay.Controls.Add(ghostEditor);
             editorOverlay.Controls.Add(codeEditor);
-            codeEditor.BringToFront(); // Asegura que el editor real esté encima
+            codeEditor.BringToFront();
+            ghostEditor.SendToBack();
 
-            // Panel con los números de línea a la izquierda
-            var editorContainer = new Panel { Dock = DockStyle.Fill };
-            editorContainer.Controls.Add(editorOverlay);
-            editorContainer.Controls.Add(lineNumberPanel);
-            editorContainer.Controls.Add(suggestionBox); // ListBox de sugerencias
-
-            editorPanel.Controls.Add(editorContainer, 0, 1);
-
-
-
-            // ListBox para sugerencias de autocompletado
+            // ListBox de sugerencias
             suggestionBox = new ListBox
             {
                 Visible = false,
@@ -166,13 +167,21 @@ namespace Wall_E
                 Width = 200
             };
 
-            // Eventos para actualizar los números de línea
+            // Panel que contiene todo
+            var editorContainer = new Panel { Dock = DockStyle.Fill };
+            editorContainer.Controls.Add(editorOverlay);
+            editorContainer.Controls.Add(lineNumberPanel);
+            editorContainer.Controls.Add(suggestionBox);
+
+            editorPanel.Controls.Add(editorContainer, 0, 1);
+            #endregion
+
+            #region Eventos del editor de código
             codeEditor.TextChanged += (s, e) => lineNumberPanel.Invalidate();
             codeEditor.VScroll += (s, e) => lineNumberPanel.Invalidate();
             codeEditor.Resize += (s, e) => lineNumberPanel.Invalidate();
             codeEditor.Leave += (s, e) => ApplySyntaxHighlighting();
 
-            // Evento Paint para dibujar los números de línea
             lineNumberPanel.Paint += (s, e) =>
             {
                 int firstIndex = codeEditor.GetCharIndexFromPosition(new Point(0, 0));
@@ -187,15 +196,9 @@ namespace Wall_E
                     e.Graphics.DrawString((i + 1).ToString(), codeEditor.Font, Brushes.Gray, 0, y);
                 }
             };
+            #endregion
 
-            var editorContainerWithOverlay = new Panel { Dock = DockStyle.Fill };
-            editorContainerWithOverlay.Controls.Add(editorOverlay);
-            editorContainerWithOverlay.Controls.Add(lineNumberPanel);
-            editorContainerWithOverlay.Controls.Add(suggestionBox);
-            editorPanel.Controls.Add(editorContainerWithOverlay, 0, 1);
-
-
-            // Panel derecho: Canvas y consola de errores.
+            #region Panel derecho - Canvas y consola
             var rightPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -207,7 +210,7 @@ namespace Wall_E
             rightPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 15f));
             mainSplit.Panel2.Controls.Add(rightPanel);
 
-            // Panel con scroll para el canvas.
+            // Scroll para el canvas
             var canvasScroll = new Panel
             {
                 AutoScroll = true,
@@ -215,11 +218,11 @@ namespace Wall_E
                 BackColor = Color.LightGray
             };
 
-            pixelCanvas = new PixelCanvas(200, 200);
+            pixelCanvas = new PixelCanvas();
             canvasScroll.Controls.Add(pixelCanvas);
             rightPanel.Controls.Add(canvasScroll, 0, 0);
 
-            // Botones de zoom y centrado.
+            // Botones de zoom y centrado
             var buttonsPanel = new FlowLayoutPanel
             {
                 FlowDirection = FlowDirection.LeftToRight,
@@ -239,7 +242,7 @@ namespace Wall_E
             buttonsPanel.Controls.Add(centerButton);
             rightPanel.Controls.Add(buttonsPanel, 0, 1);
 
-            // Caja de errores.
+            // Consola de errores
             wall_EConsole = new TextBox
             {
                 Multiline = true,
@@ -251,19 +254,20 @@ namespace Wall_E
                 Font = new Font("Consolas", 9)
             };
             rightPanel.Controls.Add(wall_EConsole, 0, 2);
+            #endregion
 
-            // Palabras clave y colores conocidos para autocompletado
-            var keywords = new List<string> { "spawn", "drawline", "color", "size", "goto", "label", "fill", "drawcircle", "drawrectangle", "if", "else", "end" };
-            var colors = new List<string> { "red", "green", "blue", "black", "white", "yellow", "gray", "purple", "cyan" };
+            #region SmartEditorHelper: autocompletado y sugerencias
+            var keywords = new List<string> { "Spawn", "DrawLine", "Color", "Size", "GoTo", "Label", "Fill", "DrawCircle", "DrawRectangle", "if", "else", "end" };
+            var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Yellow", "Gray", "Purple", "Cyan" };
 
-            // Crear un nuevo SmartEditorHelper
             var _smartEditorHelper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionBox, keywords, colors);
 
             codeEditor.KeyDown += _smartEditorHelper.Editor_KeyDown;
             codeEditor.KeyUp += _smartEditorHelper.Editor_KeyUp;
             codeEditor.TextChanged += _smartEditorHelper.Editor_TextChanged;
-
+            #endregion
         }
+
 
         #endregion
 

@@ -39,7 +39,7 @@ namespace Wall_E
         /// <summary>
         /// Inicializa el canvas con el número de columnas y filas especificado.
         /// </summary>
-        public PixelCanvas(int cols = 128, int rows = 128)
+        public PixelCanvas(int cols = 256, int rows = 256)
         {
             _cols = cols;
             _rows = rows;
@@ -356,7 +356,7 @@ namespace Wall_E
         /// </summary>
         public void ZoomOut()
         {
-            if (_pixelSize > 2)
+            if (_pixelSize > 4)
             {
                 _pixelSize -= 2;
                 Width = _cols * _pixelSize;
