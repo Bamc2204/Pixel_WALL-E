@@ -28,7 +28,6 @@ namespace Wall_E
         // ListBox para sugerencias de autocompletado.
         private ListBox suggestionBox = null!;
         // Helper para autocompletado inteligente.
-        private SmartEditorHelper _smartEditorHelper = null!;
         private RichTextBox ghostEditor = null!;
 
         #endregion
@@ -41,13 +40,6 @@ namespace Wall_E
         public MainForm()
         {
             InitializeComponent();
-
-            // Lista de palabras clave y colores para autocompletado
-            var keywords = new List<string> { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "Goto" };
-            var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Gray", "Yellow", "Cyan", "Magenta" };
-
-            // Inicializa el helper de autocompletado
-            _smartEditorHelper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionBox, keywords, colors);
         }
 
         #endregion
@@ -257,14 +249,12 @@ namespace Wall_E
             #endregion
 
             #region SmartEditorHelper: autocompletado y sugerencias
-            var keywords = new List<string> { "Spawn", "DrawLine", "Color", "Size", "GoTo", "Label", "Fill", "DrawCircle", "DrawRectangle", "if", "else", "end" };
             var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Yellow", "Gray", "Purple", "Cyan" };
 
-            var _smartEditorHelper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionBox, keywords, colors);
-
-            codeEditor.KeyDown += _smartEditorHelper.Editor_KeyDown;
-            codeEditor.KeyUp += _smartEditorHelper.Editor_KeyUp;
-            codeEditor.TextChanged += _smartEditorHelper.Editor_TextChanged;
+            // Inicializar SuggestionPopup
+            SuggestionPopup suggestionPopup = new SuggestionPopup();
+            var keywords = new[] { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "Goto" };
+            SmartEditorHelper helper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionPopup, keywords, colors);
             #endregion
         }
 
