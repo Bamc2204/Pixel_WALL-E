@@ -117,12 +117,24 @@ namespace Wall_E
 
         private void InsertSuggestion(string suggestion)
         {
-            int pos = _editor.SelectionStart;
-            string word = GetCurrentWordBeforeCursor();
-            _editor.Select(pos - word.Length, word.Length);
-            _editor.SelectedText = suggestion + (IsFunction(suggestion) ? "()" : "");
-            _editor.SelectionStart = _editor.Text.Length;
-            _suggestionPopup.Hide();
+            if (suggestion == "GoTo")
+            {
+                int pos = _editor.SelectionStart;
+                string word = GetCurrentWordBeforeCursor();
+                _editor.Select(pos - word.Length, word.Length);
+                _editor.SelectedText = suggestion + (IsFunction(suggestion) ? "[]()" : "");
+                _editor.SelectionStart = _editor.Text.Length;
+                _suggestionPopup.Hide();
+            }
+            else
+            {
+                int pos = _editor.SelectionStart;
+                string word = GetCurrentWordBeforeCursor();
+                _editor.Select(pos - word.Length, word.Length);
+                _editor.SelectedText = suggestion + (IsFunction(suggestion) ? "()" : "");
+                _editor.SelectionStart = _editor.Text.Length;
+                _suggestionPopup.Hide();
+            }
         }
 
         private void InsertAutoClose(string pair)

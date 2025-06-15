@@ -253,7 +253,7 @@ namespace Wall_E
 
             // Inicializar SuggestionPopup
             SuggestionPopup suggestionPopup = new SuggestionPopup();
-            var keywords = new[] { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "Goto" };
+            var keywords = new[] { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "GoTo" };
             SmartEditorHelper helper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionPopup, keywords, colors);
             #endregion
         }
