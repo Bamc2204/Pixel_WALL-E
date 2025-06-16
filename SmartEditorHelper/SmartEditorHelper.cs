@@ -89,11 +89,29 @@ namespace Wall_E
 
         private void Editor_KeyPress(object? sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar == '(') InsertAutoClose("()");
-            else if (e.KeyChar == '[') InsertAutoClose("[]");
-            else if (e.KeyChar == '{') InsertAutoClose("{}");
-            else if (e.KeyChar == '"') InsertAutoClose("\"\"");
-            else if (e.KeyChar == '\'') InsertAutoClose("''");
+            switch (e.KeyChar)
+            {
+                case '(':
+                    InsertAutoClose("()");
+                    e.Handled = true;
+                    break;
+                case '[':
+                    InsertAutoClose("[]");
+                    e.Handled = true;
+                    break;
+                case '{':
+                    InsertAutoClose("{}");
+                    e.Handled = true;
+                    break;
+                case '"':
+                    InsertAutoClose("\"\"");
+                    e.Handled = true;
+                    break;
+                case '\'':
+                    InsertAutoClose("''");
+                    e.Handled = true;
+                    break;
+            }
         }
 
         private void Editor_MouseMove(object? sender, MouseEventArgs e)
