@@ -334,7 +334,7 @@ namespace Wall_E
         {
             using var dialog = new SaveFileDialog
             {
-                Filter = "WLE Files (*.wle)|*.wle|All Files (*.*)|*.*"
+                Filter = "WLE Files (*.pw)|*.pw|All Files (*.*)|*.*"
             };
 
             if (dialog.ShowDialog() == DialogResult.OK)

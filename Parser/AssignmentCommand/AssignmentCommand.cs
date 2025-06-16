@@ -37,10 +37,8 @@ namespace Wall_E
         /// <param name="executor">Executor que gestiona el estado del programa.</param>
         public void Execute(Executor executor)
         {
-            // Evalúa la expresión y la convierte a int (ajusta si tu lenguaje soporta otros tipos)
-            int value = Convert.ToInt32(executor.EvaluateExpression(Expression));
             // Pasa el argumento 'Line' requerido por AssignVariable
-            executor.AssignVariable(VariableName, value, Line);
+            executor.AssignVariable(VariableName, executor.EvaluateExpression(Expression), Line);
         }
 
         #endregion

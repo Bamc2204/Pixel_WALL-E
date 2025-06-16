@@ -32,7 +32,7 @@ namespace Wall_E
         #region PrivateFields
 
         // Diccionario de variables del programa.
-        private readonly Dictionary<string, int> _variables = new();
+        private readonly Dictionary<string, object> _variables = new();
         // Lista de errores de ejecución.
         private readonly List<string> _runtimeErrors;
 
@@ -139,7 +139,7 @@ namespace Wall_E
                     throw new InvalidArgumentError($"Literal inválido: {l.Value}", "No se pudo convertir a número o string", expr.Line);
 
                 case VariableExpr v:
-                    if (_variables.TryGetValue(v.Name, out int val))
+                    if (_variables.TryGetValue(v.Name, out object val))
                         return val;
                     throw new UndefinedVariableError($"Variable no definida: {v.Name}", "Debe declarar la variable antes de usarla", expr.Line);
 
@@ -230,7 +230,7 @@ namespace Wall_E
         /// <summary>
         /// Asigna un valor a una variable.
         /// </summary>
-        public void AssignVariable(string name, int value, int line)
+        public void AssignVariable(string name, object value, int line)
         {
             _variables[name] = value;
         }
