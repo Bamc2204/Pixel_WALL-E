@@ -9,17 +9,40 @@ namespace Wall_E
 {
     /// <summary>
     /// Clase auxiliar para manejar autocompletado y sugerencias inteligentes.
+    /// Proporciona funcionalidades avanzadas de edición como:
+    /// - Autocompletado de código
+    /// - Sugerencias inteligentes
+    /// - Cierre automático de llaves, paréntesis y comillas
+    /// - Tooltips descriptivos
+    /// - Texto fantasma para sugerencias
     /// </summary>
     public class SmartEditorHelper
     {
-        private readonly RichTextBox _editor;
-        private readonly RichTextBox _ghostEditor;
-        private readonly SuggestionPopup _suggestionPopup;
-        private readonly List<string> _keywords;
-        private readonly List<string> _colors;
-        private readonly ToolTip _toolTip;
+        #region Fields
 
-        public SmartEditorHelper(RichTextBox editor, RichTextBox ghostEditor, SuggestionPopup suggestionPopup, IEnumerable<string> keywords, IEnumerable<string> colors)
+        private readonly RichTextBox _editor;           // Editor de código principal
+        private readonly RichTextBox _ghostEditor;      // Editor fantasma para sugerencias
+        private readonly SuggestionPopup _suggestionPopup; // Popup de sugerencias
+        private readonly List<string> _keywords;       // Lista de palabras clave del lenguaje
+        private readonly List<string> _colors;         // Lista de colores disponibles
+        private readonly ToolTip _toolTip;             // Tooltip para mostrar descripciones
+
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// Inicializa una nueva instancia del ayudante de edición inteligente.
+        /// </summary>
+        /// <param name="editor">Editor de código principal</param>
+        /// <param name="ghostEditor">Editor fantasma para sugerencias</param>
+        /// <param name="suggestionPopup">Popup para mostrar sugerencias</param>
+        /// <param name="keywords">Palabras clave del lenguaje</param>
+        /// <param name="colors">Colores disponibles</param>
+        public SmartEditorHelper(RichTextBox editor, RichTextBox ghostEditor, 
+                               SuggestionPopup suggestionPopup, 
+                               IEnumerable<string> keywords, 
+                               IEnumerable<string> colors)
         {
             _editor = editor;
             _ghostEditor = ghostEditor;
@@ -28,15 +51,26 @@ namespace Wall_E
             _colors = colors.ToList();
             _toolTip = new ToolTip();
 
+            #region EventSubscriptions
+            // Suscribe los eventos del editor
             _editor.KeyDown += Editor_KeyDown;
             _editor.KeyUp += Editor_KeyUp;
             _editor.KeyPress += Editor_KeyPress;
             _editor.MouseMove += Editor_MouseMove;
             _editor.TextChanged += Editor_TextChanged;
 
+            // Suscribe el evento de selección de sugerencia
             _suggestionPopup.SuggestionSelected += OnSuggestionSelected;
+            #endregion
         }
 
+        #endregion
+
+        #region EventHandlers
+
+        /// <summary>
+        /// Maneja el evento KeyDown del editor para navegar en las sugerencias.
+        /// </summary>
         private void Editor_KeyDown(object? sender, KeyEventArgs e)
         {
             if (_suggestionPopup.Visible)
@@ -59,6 +93,9 @@ namespace Wall_E
             }
         }
 
+        /// <summary>
+        /// Maneja el evento KeyUp del editor para mostrar sugerencias.
+        /// </summary>
         private void Editor_KeyUp(object? sender, KeyEventArgs e)
         {
             if (!char.IsLetterOrDigit((char)e.KeyCode) && e.KeyCode != Keys.Back)
@@ -87,6 +124,9 @@ namespace Wall_E
             UpdateGhostText();
         }
 
+        /// <summary>
+        /// Maneja el evento KeyPress del editor para auto-cerrado de caracteres.
+        /// </summary>
         private void Editor_KeyPress(object? sender, KeyPressEventArgs e)
         {
             switch (e.KeyChar)
@@ -114,6 +154,9 @@ namespace Wall_E
             }
         }
 
+        /// <summary>
+        /// Maneja el movimiento del mouse para mostrar tooltips descriptivos.
+        /// </summary>
         private void Editor_MouseMove(object? sender, MouseEventArgs e)
         {
             int index = _editor.GetCharIndexFromPosition(e.Location);
@@ -123,16 +166,29 @@ namespace Wall_E
                 _toolTip.SetToolTip(_editor, desc);
         }
 
+        /// <summary>
+        /// Maneja cambios en el texto para actualizar el texto fantasma.
+        /// </summary>
         private void Editor_TextChanged(object? sender, EventArgs e)
         {
             UpdateGhostText();
         }
 
+        /// <summary>
+        /// Maneja la selección de una sugerencia del popup.
+        /// </summary>
         private void OnSuggestionSelected(string suggestion)
         {
             InsertSuggestion(suggestion);
         }
 
+        #endregion
+
+        #region PrivateMethods
+
+        /// <summary>
+        /// Inserta la sugerencia seleccionada en el editor.
+        /// </summary>
         private void InsertSuggestion(string suggestion)
         {
             if (suggestion == "GoTo")
@@ -155,6 +211,9 @@ namespace Wall_E
             }
         }
 
+        /// <summary>
+        /// Inserta pares de caracteres (como paréntesis) y coloca el cursor entre ellos.
+        /// </summary>
         private void InsertAutoClose(string pair)
         {
             int pos = _editor.SelectionStart;
@@ -162,6 +221,9 @@ namespace Wall_E
             _editor.SelectionStart = pos + 1;
         }
 
+        /// <summary>
+        /// Obtiene la palabra actual antes del cursor.
+        /// </summary>
         private string GetCurrentWordBeforeCursor()
         {
             int pos = _editor.SelectionStart;
@@ -171,6 +233,9 @@ namespace Wall_E
             return parts.Length > 0 ? parts[^1] : "";
         }
 
+        /// <summary>
+        /// Obtiene la palabra en la posición especificada.
+        /// </summary>
         private string GetWordAt(int index)
         {
             if (index < 0 || index >= _editor.Text.Length) return "";
@@ -180,6 +245,9 @@ namespace Wall_E
             return _editor.Text.Substring(start, end - start);
         }
 
+        /// <summary>
+        /// Obtiene la descripción de una palabra clave.
+        /// </summary>
         private string? GetDescription(string word)
         {
             return word switch
@@ -196,11 +264,17 @@ namespace Wall_E
             };
         }
 
+        /// <summary>
+        /// Determina si una palabra es una función.
+        /// </summary>
         private bool IsFunction(string word)
         {
             return _keywords.Contains(word);
         }
 
+        /// <summary>
+        /// Actualiza el texto fantasma con sugerencias de autocompletado.
+        /// </summary>
         private void UpdateGhostText()
         {
             string text = _editor.Text;
@@ -220,5 +294,7 @@ namespace Wall_E
                 _ghostEditor.Text = text;
             }
         }
+
+        #endregion
     }
 }

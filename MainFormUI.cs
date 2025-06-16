@@ -51,14 +51,14 @@ namespace Wall_E
         /// </summary>
         private void InitializeComponent()
         {
-            #region Configuración de la ventana principal
+            #region MainWindowConfiguration
             Text = "Pixel Wall-E IDE";
             Width = 1400;
             Height = 900;
             StartPosition = FormStartPosition.CenterScreen;
             #endregion
 
-            #region División principal
+            #region MainSplit
             mainSplit = new SplitContainer
             {
                 Dock = DockStyle.Fill,
@@ -67,7 +67,7 @@ namespace Wall_E
             Controls.Add(mainSplit);
             #endregion
 
-            #region Panel izquierdo - Editor de código y botones
+            #region LeftPanel - CodeEditor and Buttons
             var editorPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -105,7 +105,7 @@ namespace Wall_E
             editorPanel.Controls.Add(fileButtons, 0, 0);
             #endregion
 
-            #region Editor principal, ghost y sugerencias
+            #region MainEditor, Ghost and Suggestions
             // Panel de números de línea
             lineNumberPanel = new Panel
             {
@@ -168,7 +168,7 @@ namespace Wall_E
             editorPanel.Controls.Add(editorContainer, 0, 1);
             #endregion
 
-            #region Eventos del editor de código
+            #region CodeEditorEvents
             codeEditor.TextChanged += (s, e) => lineNumberPanel.Invalidate();
             codeEditor.VScroll += (s, e) => lineNumberPanel.Invalidate();
             codeEditor.Resize += (s, e) => lineNumberPanel.Invalidate();
@@ -190,7 +190,7 @@ namespace Wall_E
             };
             #endregion
 
-            #region Panel derecho - Canvas y consola
+            #region RightPanel - Canvas and Console
             var rightPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
@@ -248,7 +248,7 @@ namespace Wall_E
             rightPanel.Controls.Add(wall_EConsole, 0, 2);
             #endregion
 
-            #region SmartEditorHelper: autocompletado y sugerencias
+            #region SmartEditorHelper: Autocomplete and Suggestions
             var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Yellow", "Gray", "Purple", "Cyan" };
 
             // Inicializar SuggestionPopup
@@ -257,7 +257,6 @@ namespace Wall_E
             SmartEditorHelper helper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionPopup, keywords, colors);
             #endregion
         }
-
 
         #endregion
 

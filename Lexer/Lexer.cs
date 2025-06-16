@@ -70,11 +70,11 @@ namespace Wall_E
                     if (IsValidLabel(word) && _newLineJustPassed && IsLabelAloneOnLine())
                     {
                         tokens.Add(new Token(TokenType.LABEL_DEF, word, _line));
-                        System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo={tokenAux.Type}, Lexema='{tokenAux.Lexeme}', Línea={tokenAux.Line}");
+                        //System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo={tokenAux.Type}, Lexema='{tokenAux.Lexeme}', Línea={tokenAux.Line}");
                     }
                     else
                     {
-                        System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo={tokenAux.Type}, Lexema='{tokenAux.Lexeme}', Línea={tokenAux.Line}");
+                        //System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo={tokenAux.Type}, Lexema='{tokenAux.Lexeme}', Línea={tokenAux.Line}");
                         tokens.Add(tokenAux);
                     }
 
@@ -88,7 +88,7 @@ namespace Wall_E
                     string number = ReadWhile(char.IsDigit);
                     tokens.Add(new Token(TokenType.NUMBER, number, _line));
                     _newLineJustPassed = false;
-                    System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo= NUMBER, Lexema='{number}', Línea={_line}");
+                    //System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo= NUMBER, Lexema='{number}', Línea={_line}");
                     continue;
                 }
 
@@ -99,7 +99,7 @@ namespace Wall_E
                     string str = ReadString();
                     tokens.Add(new Token(TokenType.STRING, str, _line));
                     _newLineJustPassed = false;
-                    System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo= STRING, Lexema='{str}', Línea={_line}");
+                    //System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo= STRING, Lexema='{str}', Línea={_line}");
                     continue;
                 }
 
@@ -116,7 +116,7 @@ namespace Wall_E
                 Token token = RecognizeSymbolOrOperator(c);
                 tokens.Add(token);
                 _newLineJustPassed = false;
-                System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo={token.Type}, Lexema='{token.Lexeme}', Línea={token.Line}");
+                //System.Windows.Forms.MessageBox.Show($"[DEBUG LEXER] Token creado: Tipo={token.Type}, Lexema='{token.Lexeme}', Línea={token.Line}");
             }
 
             // Token de fin de archivo

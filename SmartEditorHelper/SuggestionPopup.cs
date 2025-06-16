@@ -11,15 +11,26 @@ namespace Wall_E
     /// </summary>
     public class SuggestionPopup : Form
     {
+        #region Fields
+
         private readonly ListBox listBox;
+
+        #endregion
+
+        #region Events
 
         /// <summary>
         /// Evento que se dispara cuando se selecciona una sugerencia.
         /// </summary>
         public event Action<string>? SuggestionSelected;
 
+        #endregion
+
+        #region Constructor
+
         public SuggestionPopup()
         {
+            #region ListBoxConfiguration
             listBox = new ListBox
             {
                 Dock = DockStyle.Fill,
@@ -41,14 +52,21 @@ namespace Wall_E
                     e.Handled = true;
                 }
             };
+            #endregion
 
+            #region FormConfiguration
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
             ShowInTaskbar = false;
             TopMost = true;
 
             Controls.Add(listBox);
+            #endregion
         }
+
+        #endregion
+
+        #region PublicMethods
 
         /// <summary>
         /// Establece las sugerencias que se deben mostrar.
@@ -100,6 +118,10 @@ namespace Wall_E
             }
         }
 
+        #endregion
+
+        #region PrivateMethods
+
         /// <summary>
         /// Llama al evento cuando se selecciona una sugerencia.
         /// </summary>
@@ -108,5 +130,7 @@ namespace Wall_E
             SuggestionSelected?.Invoke(GetSelected());
             Hide();
         }
+
+        #endregion
     }
 }

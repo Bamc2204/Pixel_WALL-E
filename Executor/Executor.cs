@@ -156,8 +156,6 @@ namespace Wall_E
                                     "División por cero", "El divisor es cero", expr.Line),
                         "%" => left % right,
                         "**" => (int)Math.Pow(left, right),
-
-                        // ✅ Nuevos operadores relacionales:
                         "==" => left == right ? 1 : 0,
                         "!=" => left != right ? 1 : 0,
                         "<" => left < right ? 1 : 0,
