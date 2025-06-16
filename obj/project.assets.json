@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Programacion\\Proyectos\\Walle\\Back-end\\Back-end.csproj",
-      "projectName": "Back-end",
-      "projectPath": "D:\\Programacion\\Proyectos\\Walle\\Back-end\\Back-end.csproj",
+      "projectUniqueName": "D:\\Programacion\\Proyectos\\Walle\\Wall_E\\Wall_E.csproj",
+      "projectName": "Wall_E",
+      "projectPath": "D:\\Programacion\\Proyectos\\Walle\\Wall_E\\Wall_E.csproj",
       "packagesPath": "C:\\Users\\Bamc\\.nuget\\packages\\",
-      "outputPath": "D:\\Programacion\\Proyectos\\Walle\\Back-end\\obj\\",
+      "outputPath": "D:\\Programacion\\Proyectos\\Walle\\Wall_E\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Bamc\\AppData\\Roaming\\NuGet\\NuGet.Config",
