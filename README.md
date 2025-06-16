@@ -187,6 +187,57 @@ Transformación de vista
 
 Zoom (1x-10x)
 
+## 📊 Diagramas de Arquitectura
+%% 1. Flujo General del Sistema
+graph TD
+    A[Usuario] --> B[Editor de Código]
+    B --> C[Lexer]
+    C --> D[Parser]
+    D --> E[Executor]
+    E --> F[PixelCanvas]
+    E --> G[ErrorManager]
+
+%% 2. Flujo Interno Lexer → Parser → Executor
+graph LR
+    A1[Lexer.cs]
+    A2[TokenType.cs]
+    A3[Token.cs]
+    A1 --> A2
+    A1 --> A3
+    A3 --> B1[Parser.cs]
+    B1 --> C1[ICode]
+    C1 --> D1[Executor.cs]
+    D1 --> D2[PixelCanvas]
+    D1 --> D3[ErrorManager]
+
+%% 3. Jerarquía de Clases: Comandos que implementan ICode
+classDiagram
+    ICode <|-- SpawnCommand
+    ICode <|-- DrawLineCommand
+    ICode <|-- DrawCircleCommand
+    ICode <|-- FillCommand
+    ICode <|-- LabelCommand
+    ICode <|-- GotoCommand
+    ICode <|-- AssignmentCommand
+    ICode <|-- ConditionalCommand
+
+%% 4. Ciclo de Renderizado en Interfaz Gráfica
+sequenceDiagram
+    participant User
+    participant CodeEditor
+    participant Lexer
+    participant Parser
+    participant Executor
+    participant PixelCanvas
+
+    User->>CodeEditor: Escribe código
+    CodeEditor->>Lexer: Tokenize()
+    Lexer->>Parser: Tokens
+    Parser->>Executor: Lista de ICode
+    Executor->>PixelCanvas: Dibuja en OnPaint
+    PixelCanvas->>User: Actualiza interfaz
+
+
 📜 Ejemplo de Código Completo
 python
 # Configuración inicial
