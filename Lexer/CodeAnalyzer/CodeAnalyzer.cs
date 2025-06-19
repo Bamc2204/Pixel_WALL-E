@@ -73,6 +73,19 @@ namespace Wall_E
         }
 
         #endregion
+
+        #region Getters
+        
+        /// <summary>
+        /// Permite obtener el código fuente almacenado actualmente.
+        /// </summary>
+        /// <returns>El código fuente actual.</returns>
+        public string GetSourceCode()
+        {
+            return _sourceCode;
+        }
+
+        #endregion
     }
 
     #endregion
