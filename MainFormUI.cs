@@ -249,11 +249,11 @@ namespace Wall_E
             #endregion
 
             #region SmartEditorHelper: Autocomplete and Suggestions
-            var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Yellow", "Gray", "Purple", "Cyan" };
+            var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Yellow", "Gray", "Purple", "Cyan", "Transparent" };
 
             // Inicializar SuggestionPopup
             SuggestionPopup suggestionPopup = new SuggestionPopup();
-            var keywords = new[] { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "GoTo" };
+            var keywords = new[] { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "GoTo", "GetActualX", "GetActualY", "GetCanvasSize", "GetColorCount", "IsBrushColor", "IsBrushSize", "IsCanvasColor" };
             SmartEditorHelper helper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionPopup, keywords, colors);
             #endregion
         }

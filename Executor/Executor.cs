@@ -127,50 +127,82 @@ namespace Wall_E
         /// </summary>
         public object EvaluateExpression(Expr expr)
         {
+            // Usa pattern matching para verificar el tipo de expresión
             switch (expr)
             {
+                // Caso 1: Literal (número o string)
                 case LiteralExpr l:
-                    // Si es un número, retorna el número
+                    // Intenta convertir el valor del literal a un entero (si es posible)
                     if (int.TryParse(l.Value, out int value))
-                        return value;
-                    // Si empieza y termina con comillas, es un string: quita las comillas
+                        return value; // Si lo logra, retorna el número
+
+                    // Si no es número, verifica si es un string (empieza y termina con comillas)
                     if (l.Value.StartsWith("\"") && l.Value.EndsWith("\""))
-                        return l.Value.Substring(1, l.Value.Length - 2);
-                    throw new InvalidArgumentError($"Literal inválido: {l.Value}", "No se pudo convertir a número o string", expr.Line);
+                        return l.Value.Substring(1, l.Value.Length - 2); // Quita las comillas y retorna el texto
 
+                    // Si no es ni número ni string, lanza un error personalizado
+                    throw new InvalidArgumentError(
+                        $"Literal inválido: {l.Value}", 
+                        "No se pudo convertir a número o string", 
+                        expr.Line
+                    );
+
+                // Caso 2: Variable (ej. X o nombre definido anteriormente)
                 case VariableExpr v:
+                    // Intenta buscar la variable en el diccionario de variables
                     if (_variables.TryGetValue(v.Name, out object val))
-                        return val;
-                    throw new UndefinedVariableError($"Variable no definida: {v.Name}", "Debe declarar la variable antes de usarla", expr.Line);
+                        return val; // Si la encuentra, retorna su valor
 
+                    // Si no la encuentra, lanza error
+                    throw new UndefinedVariableError(
+                        $"Variable no definida: {v.Name}", 
+                        "Debe declarar la variable antes de usarla", 
+                        expr.Line
+                    );
+
+                // Caso 3: Expresión binaria (ej. A + B, 5 * 2, etc.)
                 case BinaryExpr b:
+                    // Evalúa recursivamente la parte izquierda de la expresión
                     int left = Convert.ToInt32(EvaluateExpression(b.Left));
+
+                    // Evalúa recursivamente la parte derecha de la expresión
                     int right = Convert.ToInt32(EvaluateExpression(b.Right));
 
+                    // Usa un switch para ejecutar el operador correspondiente
                     return b.Operator switch
                     {
                         "+" => left + right,
                         "-" => left - right,
                         "*" => left * right,
-                        "/" => right != 0 ? left / right : throw new DivisionByZeroError(
-                                    "División por cero", "El divisor es cero", expr.Line),
+                        "/" => right != 0 
+                            ? left / right 
+                            : throw new DivisionByZeroError(
+                                    "División por cero", 
+                                    "El divisor es cero", 
+                                    expr.Line),
                         "%" => left % right,
-                        "**" => (int)Math.Pow(left, right),
+                        "**" => (int)Math.Pow(left, right), // potencia entera
+
+                        // Operadores de comparación retornan 1 (true) o 0 (false)
                         "==" => left == right ? 1 : 0,
                         "!=" => left != right ? 1 : 0,
-                        "<" => left < right ? 1 : 0,
+                        "<"  => left < right  ? 1 : 0,
                         "<=" => left <= right ? 1 : 0,
-                        ">" => left > right ? 1 : 0,
+                        ">"  => left > right  ? 1 : 0,
                         ">=" => left >= right ? 1 : 0,
 
+                        // Si el operador no es conocido, lanza error
                         _ => throw new InvalidArgumentError(
-                            $"Operador desconocido: {b.Operator}", "No se reconoce el operador", expr.Line)
+                            $"Operador desconocido: {b.Operator}", 
+                            "No se reconoce el operador", 
+                            expr.Line)
                     };
 
-
+                // Caso 4: Llamada a función especial (ej. GetCanvasSize(), IsBrushColor("Red"))
                 case FunctionCallExpr f:
-                    return EvaluateFunction(f);
+                    return EvaluateFunction(f); // Delegamos al método especializado para funciones
 
+                // Si no es ninguno de los casos anteriores, lanza error
                 default:
                     throw new EmptyExpressionError("Expresión inválida", expr.Line);
             }
@@ -220,7 +252,7 @@ namespace Wall_E
         /// </summary>
         public bool EvaluateCondition(Expr expr)
         {
-             return Convert.ToInt32(EvaluateExpression(expr)) != 0;
+            return Convert.ToInt32(EvaluateExpression(expr)) != 0;
         }
 
         #endregion
