@@ -24,7 +24,7 @@ namespace Wall_E
         // Tamaño actual del pincel.
         private int _brushSize = 1;
         // Color actual del pincel.
-        private Color _brushColor = Color.Black;
+        private Color _brushColor;
         // Posición actual del cursor en el canvas.
         private Point _cursorPosition;
         // Controla si se muestra el cursor.
@@ -39,7 +39,7 @@ namespace Wall_E
         /// <summary>
         /// Inicializa el canvas con el número de columnas y filas especificado.
         /// </summary>
-        public PixelCanvas(int cols = 256, int rows = 256)
+        public PixelCanvas(int cols = 64, int rows = 64)
         {
             _cols = cols;
             _rows = rows;
@@ -105,24 +105,9 @@ namespace Wall_E
         public Color GetCurrentColor() => _brushColor;
 
         /// <summary>
-        /// Cambia el color actual del pincel.
-        /// </summary>
-        public void SetBrushColor(Color color) => _brushColor = color;
-
-        /// <summary>
         /// Cambia el tamaño actual del pincel.
         /// </summary>
         public void SetBrushSize(int size) => _brushSize = size;
-
-        /// <summary>
-        /// Devuelve la posición X del cursor.
-        /// </summary>
-        public int CursorX => _cursorPosition.X;
-
-        /// <summary>
-        /// Devuelve la posición Y del cursor.
-        /// </summary>
-        public int CursorY => _cursorPosition.Y;
 
         /// <summary>
         /// Devuelve el número de columnas del canvas.
@@ -224,43 +209,54 @@ namespace Wall_E
         /// </summary>
         public void Fill(Color color)
         {
+            // Posición inicial del cursor (desde donde empieza el relleno)
             int startX = _cursorPosition.X;
             int startY = _cursorPosition.Y;
 
+            // Si el cursor está fuera de los límites del canvas, no hace nada
             if (startX < 0 || startX >= _cols || startY < 0 || startY >= _rows)
                 return;
 
+            // Color que se va a reemplazar (el color actual en la posición del cursor)
             int targetColor = _pixels[startX, startY];
+
+            // Color nuevo que queremos pintar (convertido a entero con ToArgb)
             int fillColor = color.ToArgb();
 
+            // Si el color de destino ya es el color nuevo, no hay nada que hacer
             if (targetColor == fillColor)
                 return;
 
+            // Cola para llevar el control de los píxeles que se deben procesar
             Queue<Point> queue = new Queue<Point>();
-            queue.Enqueue(new Point(startX, startY));
+            queue.Enqueue(new Point(startX, startY)); // Agrega el punto inicial
 
+            // Mientras haya puntos en la cola por procesar...
             while (queue.Count > 0)
             {
-                Point p = queue.Dequeue();
+                Point p = queue.Dequeue(); // Saca el siguiente punto
                 int x = p.X;
                 int y = p.Y;
 
+                // Verifica si está dentro del canvas
                 if (x < 0 || x >= _cols || y < 0 || y >= _rows)
                     continue;
 
+                // Si este píxel no tiene el color original, no lo tocamos
                 if (_pixels[x, y] != targetColor)
                     continue;
 
+                // Cambia el color del píxel actual
                 _pixels[x, y] = fillColor;
 
-                queue.Enqueue(new Point(x + 1, y));
-                queue.Enqueue(new Point(x - 1, y));
-                queue.Enqueue(new Point(x, y + 1));
-                queue.Enqueue(new Point(x, y - 1));
+                // Agrega los píxeles vecinos a la cola (izquierda, derecha, arriba, abajo)
+                queue.Enqueue(new Point(x + 1, y)); // derecha
+                queue.Enqueue(new Point(x - 1, y)); // izquierda
+                queue.Enqueue(new Point(x, y + 1)); // abajo
+                queue.Enqueue(new Point(x, y - 1)); // arriba
             }
-
-            Invalidate();
         }
+
 
         #endregion
 
