@@ -250,12 +250,11 @@ namespace Wall_E
         private Expr ParsePrimary()
         {
             // Soporta números negativos
-            if (Match(TokenType.MINUS) && Check(TokenType.NUMBER))
+            if (Match(TokenType.MINUS))
             {
                 Token minus = Previous();
-                Token number = Advance();
-                string value = "-" + number.Lexeme;
-                return new LiteralExpr { Value = value, Line = minus.Line };
+                Expr right = ParsePrimary();
+                return new UnaryExpr { Operator = minus, Right = right, Line = minus.Line };
             }
 
             // Soporta expresiones entre paréntesis

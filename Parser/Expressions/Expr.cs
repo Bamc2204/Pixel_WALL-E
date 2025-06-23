@@ -75,6 +75,17 @@ namespace Wall_E
 
     #endregion
 
+    #region UnaryExpression
+        
+        public class UnaryExpr : Expr
+        {
+            public Token Operator { get; set; }
+            public Expr Right { get; set; }
+        }
+
+
+    #endregion
+
     #region FunctionCallExpression
 
     /// <summary>

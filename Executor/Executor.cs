@@ -198,7 +198,13 @@ namespace Wall_E
                             expr.Line)
                     };
 
-                // Caso 4: Llamada a función especial (ej. GetCanvasSize(), IsBrushColor("Red"))
+                case UnaryExpr u:
+                    object num = EvaluateExpression(u.Right);
+                    if (num is int intValue)
+                        return -intValue;  // Si el valor es un número
+                    throw new InvalidArgumentError("-", "El operador unario '-' requiere un número entero", u.Line);
+
+                        // Caso 5: Llamada a función especial (ej. GetCanvasSize(), IsBrushColor("Red"))
                 case FunctionCallExpr f:
                     return EvaluateFunction(f); // Delegamos al método especializado para funciones
 
@@ -279,7 +285,7 @@ namespace Wall_E
                     Color pixelColor = Canvas.GetPixelColor(x, y, f.Line);
                     var a = pixelColor.ToArgb() == expectedColor.ToArgb() ? 1 : 0;
                     System.Windows.Forms.MessageBox.Show($"{a}");
-                    return pixelColor.ToArgb() == expectedColor.ToArgb() ? 1 : 0;
+                    return a;
 
                 default:
                     throw new FunctionNotImplementedError(f.FunctionName, f.Line);
