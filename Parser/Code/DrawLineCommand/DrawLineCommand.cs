@@ -28,7 +28,7 @@ namespace Wall_E
             int length = Convert.ToInt32(executor.EvaluateExpression(Arguments[2]));
 
             // Dibuja la línea en el canvas usando el color y tamaño actuales del pincel.
-            executor.Canvas.DrawLine(dx, dy, length, executor.BrushColor, executor.BrushSize);
+            executor.Canvas.DrawLine(dx, dy, length, executor.BrushColor, executor.BrushSize, Line);
         }
         
         #endregion

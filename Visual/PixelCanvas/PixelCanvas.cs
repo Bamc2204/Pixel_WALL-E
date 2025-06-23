@@ -39,7 +39,7 @@ namespace Wall_E
         /// <summary>
         /// Inicializa el canvas con el número de columnas y filas especificado.
         /// </summary>
-        public PixelCanvas(int cols = 64, int rows = 64)
+        public PixelCanvas(int cols = 512, int rows = 512)
         {
             _cols = cols;
             _rows = rows;
@@ -136,14 +136,14 @@ namespace Wall_E
         /// <summary>
         /// Dibuja una línea desde la posición actual del cursor en la dirección y distancia indicadas.
         /// </summary>
-        public void DrawLine(int dx, int dy, int distance, Color color, int size)
+        public void DrawLine(int dx, int dy, int distance, Color color, int size, int line)
         {
             int x = _cursorPosition.X;
             int y = _cursorPosition.Y;
 
             for (int i = 0; i < distance; i++)
             {
-                DrawPoint(x, y, color, size);
+                DrawPoint(x, y, color, size, line);
                 x += dx;
                 y += dy;
             }
@@ -167,7 +167,7 @@ namespace Wall_E
                 double rad = angle * Math.PI / 180;
                 int x = newX + (int)(radius * Math.Cos(rad));
                 int y = newY + (int)(radius * Math.Sin(rad));
-                DrawPoint(x, y, color, brushSize);
+                DrawPoint(x, y, color, brushSize, line);
             }
 
             Invalidate();
@@ -189,14 +189,14 @@ namespace Wall_E
 
             for (int i = 0; i < width; i++)
             {
-                DrawPoint(left + i, top, color, brushSize);
-                DrawPoint(left + i, top + height - 1, color, brushSize);
+                DrawPoint(left + i, top, color, brushSize, line);
+                DrawPoint(left + i, top + height - 1, color, brushSize, line);
             }
 
             for (int j = 0; j < height; j++)
             {
-                DrawPoint(left, top + j, color, brushSize);
-                DrawPoint(left + width - 1, top + j, color, brushSize);
+                DrawPoint(left, top + j, color, brushSize, line);
+                DrawPoint(left + width - 1, top + j, color, brushSize, line);
             }
 
             Invalidate();
@@ -308,15 +308,15 @@ namespace Wall_E
         /// <summary>
         /// Dibuja un punto en la posición indicada usando el color y tamaño actuales.
         /// </summary>
-        private void DrawPoint(int cx, int cy)
+        private void DrawPoint(int cx, int cy, int line)
         {
-            DrawPoint(cx, cy, _brushColor, _brushSize);
+            DrawPoint(cx, cy, _brushColor, _brushSize, line);
         }
 
         /// <summary>
         /// Dibuja un punto en la posición indicada usando el color y tamaño especificados.
         /// </summary>
-        private void DrawPoint(int cx, int cy, Color color, int size)
+        private void DrawPoint(int cx, int cy, Color color, int size, int line)
         {
             for (int dx = -size / 2; dx <= size / 2; dx++)
             {
@@ -326,7 +326,7 @@ namespace Wall_E
                     int y = cy + dy;
 
                     if (!IsInBounds(x, y))
-                        continue;
+                        throw new CanvasOutOfBoundsError(x, y, _cols, _rows, line);
 
                     _pixels[x, y] = color.ToArgb();
                 }
@@ -359,6 +359,34 @@ namespace Wall_E
                 Height = _rows * _pixelSize;
                 Invalidate();
             }
+        }
+
+        /// <summary>
+        /// Cuenta cuántos píxeles tienen un color específico dentro de un área rectangular.
+        /// </summary>
+        public int CountColorPixels(Color color, int x1, int y1, int x2, int y2, int line)
+        {
+            // Si alguno de los puntos está fuera del canvas, se retorna 0 como indica el requisito
+            if (!IsInBounds(x1, y1) || !IsInBounds(x2, y2)) return 0;
+
+            int minX = Math.Min(x1, x2);
+            int maxX = Math.Max(x1, x2);
+            int minY = Math.Min(y1, y2);
+            int maxY = Math.Max(y1, y2);
+
+            int colorArgb = color.ToArgb();
+            int count = 0;
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    if (_pixels[x, y] == colorArgb)
+                        count++;
+                }
+            }
+
+            return count;
         }
 
         #endregion

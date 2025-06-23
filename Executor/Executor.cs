@@ -225,7 +225,17 @@ namespace Wall_E
                     return Canvas.Cols * Canvas.Rows;
 
                 case "GetColorCount":
-                    return Enum.GetNames(typeof(KnownColor)).Length;
+                    string colorName = EvaluateExpression(f.Arguments[0]).ToString()!.Trim('"');
+                    if (!Enum.TryParse<KnownColor>(colorName, true, out var knownColor))
+                        return 0;
+
+                    int x1 = Convert.ToInt32(EvaluateExpression(f.Arguments[1]));
+                    int y1 = Convert.ToInt32(EvaluateExpression(f.Arguments[2]));
+                    int x2 = Convert.ToInt32(EvaluateExpression(f.Arguments[3]));
+                    int y2 = Convert.ToInt32(EvaluateExpression(f.Arguments[4]));
+
+                    return Canvas.CountColorPixels(Color.FromKnownColor(knownColor), x1, y1, x2, y2, f.Line);
+
 
                 case "IsBrushColor":
                     return f.Arguments.Count == 1 && f.Arguments[0] is LiteralExpr litColor &&
@@ -237,10 +247,24 @@ namespace Wall_E
                            int.TryParse(litSize.Value, out int s) && s == BrushSize ? 1 : 0;
 
                 case "IsCanvasColor":
-                    return f.Arguments.Count == 1 && f.Arguments[0] is LiteralExpr lit &&
-                           Canvas.GetPixelColor(Canvas.GetCursorX(), Canvas.GetCursorY(), f.Line).Name.Equals(
-                               lit.Value.Trim('"'), StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+                    if (f.Arguments.Count != 3)
+                        throw new InvalidFunctionArityError("IsCanvasColor", 3, f.Arguments.Count, f.Line);
 
+                    string targetColorName = EvaluateExpression(f.Arguments[0]).ToString()!.Trim('"');
+                    if (!Enum.TryParse<KnownColor>(targetColorName, true, out var expectedColor))
+                        return 0;
+
+                    int dx = Convert.ToInt32(EvaluateExpression(f.Arguments[1]));
+                    int dy = Convert.ToInt32(EvaluateExpression(f.Arguments[2]));
+
+                    int x = Canvas.GetCursorX() + dx;
+                    int y = Canvas.GetCursorY() + dy;
+
+                    if (!Canvas.IsInBounds(x, y)) return 0;
+
+                    var pixelColor = Canvas.GetPixelColor(x, y, f.Line);
+                    return pixelColor.Name.Equals(targetColorName, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+                    
                 default:
                     throw new FunctionNotImplementedError(f.FunctionName, f.Line);
             }
