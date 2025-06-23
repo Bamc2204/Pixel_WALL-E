@@ -250,9 +250,11 @@ namespace Wall_E
                     if (f.Arguments.Count != 3)
                         throw new InvalidFunctionArityError("IsCanvasColor", 3, f.Arguments.Count, f.Line);
 
-                    string targetColorName = EvaluateExpression(f.Arguments[0]).ToString()!.Trim('"');
-                    if (!Enum.TryParse<KnownColor>(targetColorName, true, out var expectedColor))
-                        return 0;
+                    object evaluated = EvaluateExpression(f.Arguments[0]);
+                    if (evaluated is not string colorStr)
+                        throw new InvalidArgumentError("IsCanvasColor", "El primer argumento debe ser un color (string)", f.Line);
+
+                    string targetColorName = colorStr.Trim('"');
 
                     int dx = Convert.ToInt32(EvaluateExpression(f.Arguments[1]));
                     int dy = Convert.ToInt32(EvaluateExpression(f.Arguments[2]));
@@ -262,9 +264,23 @@ namespace Wall_E
 
                     if (!Canvas.IsInBounds(x, y)) return 0;
 
-                    var pixelColor = Canvas.GetPixelColor(x, y, f.Line);
-                    return pixelColor.Name.Equals(targetColorName, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
-                    
+                    Color expectedColor;
+                    try
+                    {
+                        expectedColor = Color.FromName(targetColorName);
+                        if (expectedColor.ToArgb() == 0) return 0; // color inválido
+                    }
+                    catch
+                    {
+                        return 0;
+                    }
+
+                    // Obtener el color del canvas y comparar por ARGB
+                    Color pixelColor = Canvas.GetPixelColor(x, y, f.Line);
+                    var a = pixelColor.ToArgb() == expectedColor.ToArgb() ? 1 : 0;
+                    System.Windows.Forms.MessageBox.Show($"{a}");
+                    return pixelColor.ToArgb() == expectedColor.ToArgb() ? 1 : 0;
+
                 default:
                     throw new FunctionNotImplementedError(f.FunctionName, f.Line);
             }
