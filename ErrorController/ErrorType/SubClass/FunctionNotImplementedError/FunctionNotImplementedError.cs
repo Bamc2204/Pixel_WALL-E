@@ -17,7 +17,7 @@ namespace Wall_E
         /// <param name="function">Nombre de la función no implementada.</param>
         /// <param name="line">Número de línea donde ocurrió el error.</param>
         public FunctionNotImplementedError(string function, int line)
-            : base($"Function not implemented: {function}", line)
+            : base($"Función no implementada: {function}", line)
         {
         }
         #endregion

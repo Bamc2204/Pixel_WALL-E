@@ -308,7 +308,7 @@ namespace Wall_E
         /// <summary>
         /// Asigna un valor a una variable.
         /// </summary>
-        public void AssignVariable(string name, object value, int line)
+        public void AssignVariable(string name, object value)
         {
             _variables[name] = value;
         }

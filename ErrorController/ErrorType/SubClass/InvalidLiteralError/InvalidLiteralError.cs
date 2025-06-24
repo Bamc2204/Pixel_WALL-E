@@ -17,9 +17,7 @@ namespace Wall_E
         /// <param name="message">Mensaje o valor del literal inválido.</param>
         /// <param name="line">Línea del código donde ocurrió el error.</param>
         public InvalidLiteralError(string message, int line)
-            : base($"[Line {line}] Invalid literal: {message}", line)
-        {
-        }
+            : base($"[Linea {line}] Literal no válido: {message}", line){ }
 
         #endregion
     }

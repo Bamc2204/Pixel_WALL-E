@@ -16,7 +16,7 @@ namespace Wall_E
         /// <param name="detail">Detalle del argumento inválido.</param>
         /// <param name="line">Línea del código donde ocurrió el error.</param>
         public InvalidArgumentError(string detail, int line)
-            : base($"Invalid argument: {detail}", line)
+            : base($"Argumento no válido: {detail}", line)
         {
         }
 

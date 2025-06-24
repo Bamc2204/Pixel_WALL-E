@@ -38,7 +38,7 @@ namespace Wall_E
         public void Execute(Executor executor)
         {
             // Pasa el argumento 'Line' requerido por AssignVariable
-            executor.AssignVariable(VariableName, executor.EvaluateExpression(Expression), Line);
+            executor.AssignVariable(VariableName, executor.EvaluateExpression(Expression));
         }
 
         #endregion

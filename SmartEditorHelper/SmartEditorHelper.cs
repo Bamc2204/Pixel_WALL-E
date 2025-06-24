@@ -20,12 +20,13 @@ namespace Wall_E
     {
         #region Fields
 
-        private readonly RichTextBox _editor;           // Editor de código principal
-        private readonly RichTextBox _ghostEditor;      // Editor fantasma para sugerencias
-        private readonly SuggestionPopup _suggestionPopup; // Popup de sugerencias
-        private readonly List<string> _keywords;       // Lista de palabras clave del lenguaje
-        private readonly List<string> _colors;         // Lista de colores disponibles
-        private readonly ToolTip _toolTip;             // Tooltip para mostrar descripciones
+        private readonly RichTextBox _editor;                                       // Editor de código principal
+        private readonly RichTextBox _ghostEditor;                                  // Editor fantasma para sugerencias
+        private readonly SuggestionPopup _suggestionPopup;                          // Popup de sugerencias
+        private readonly List<string> _keywords;                                    // Lista de palabras clave del lenguaje
+        private readonly List<string> _colors;                                      // Lista de colores disponibles
+        private readonly ToolTip _toolTip;                                          // Tooltip para mostrar descripciones
+        private int _posCursor;                                                            // Posición del cursor en el editor
 
         #endregion
 
@@ -39,9 +40,9 @@ namespace Wall_E
         /// <param name="suggestionPopup">Popup para mostrar sugerencias</param>
         /// <param name="keywords">Palabras clave del lenguaje</param>
         /// <param name="colors">Colores disponibles</param>
-        public SmartEditorHelper(RichTextBox editor, RichTextBox ghostEditor, 
-                               SuggestionPopup suggestionPopup, 
-                               IEnumerable<string> keywords, 
+        public SmartEditorHelper(RichTextBox editor, RichTextBox ghostEditor,
+                               SuggestionPopup suggestionPopup,
+                               IEnumerable<string> keywords,
                                IEnumerable<string> colors)
         {
             _editor = editor;
@@ -52,6 +53,7 @@ namespace Wall_E
             _toolTip = new ToolTip();
 
             #region EventSubscriptions
+
             // Suscribe los eventos del editor
             _editor.KeyDown += Editor_KeyDown;
             _editor.KeyUp += Editor_KeyUp;
@@ -61,6 +63,7 @@ namespace Wall_E
 
             // Suscribe el evento de selección de sugerencia
             _suggestionPopup.SuggestionSelected += OnSuggestionSelected;
+
             #endregion
         }
 
@@ -73,22 +76,22 @@ namespace Wall_E
         /// </summary>
         private void Editor_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (_suggestionPopup.Visible)
+            if (_suggestionPopup.Visible)                                           // Si el popup de sugerencias está visible
             {
-                if (e.KeyCode == Keys.Down || e.KeyCode == Keys.Up)
+                if (e.KeyCode == Keys.Down || e.KeyCode == Keys.Up)                 // Teclas de navegación
                 {
-                    _suggestionPopup.HandleKey(e.KeyCode);
-                    e.Handled = true;
+                    _suggestionPopup.HandleKey(e.KeyCode);                          // Mueve la selección en el ListBox
+                    e.Handled = true;                                               // Marca el evento como manejado
                 }
-                else if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Tab)
+                else if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Tab)          // Teclas de selección
                 {
-                    InsertSuggestion(_suggestionPopup.GetSelected());
-                    e.Handled = true;
+                    InsertSuggestion(_suggestionPopup.GetSelected());               // Inserta la sugerencia seleccionada
+                    e.Handled = true;                                               // Marca el evento como manejado
                 }
                 else if (e.KeyCode == Keys.Escape)
                 {
-                    _suggestionPopup.Hide();
-                    e.Handled = true;
+                    _suggestionPopup.Hide();                                        // Tecla para cancelar
+                    e.Handled = true;                                               // Marca el evento como manejado
                 }
             }
         }
@@ -98,30 +101,32 @@ namespace Wall_E
         /// </summary>
         private void Editor_KeyUp(object? sender, KeyEventArgs e)
         {
+            // Solo procesa teclas alfanuméricas y Backspace
             if (!char.IsLetterOrDigit((char)e.KeyCode) && e.KeyCode != Keys.Back)
                 return;
 
-            int pos = _editor.SelectionStart;
-            string prefix = GetCurrentWordBeforeCursor();
+            _posCursor = _editor.SelectionStart;                                    // Obtiene posición actual del cursor        
+            string prefix = GetCurrentWordBeforeCursor();                           // Obtiene la palabra parcial antes del cursor
 
+            // Filtra sugerencias que coincidan con el prefijo
             var suggestions = _keywords.Concat(_colors)
-                .Where(k => k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                .Where(k => k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))           
                 .ToList();
 
-            if (suggestions.Count > 0 && prefix.Length > 0)
+            if (suggestions.Count > 0 && prefix.Length > 0)                         // Si hay sugerencias válidas
             {
-                _suggestionPopup.SetSuggestions(suggestions);
-                _suggestionPopup.SelectFirst();
+                _suggestionPopup.SetSuggestions(suggestions);                       // Carga las sugerencias
+                _suggestionPopup.SelectFirst();                                     // Selecciona la primera
 
-                Point caretPos = _editor.GetPositionFromCharIndex(pos);
-                _suggestionPopup.ShowAt(caretPos, _editor);
+                Point caretPos = _editor.GetPositionFromCharIndex(_posCursor);      // Obtiene posición visual del cursor
+                _suggestionPopup.ShowAt(caretPos, _editor);                         // Muestra el popup en esa posición
             }
             else
             {
-                _suggestionPopup.Hide();
+                _suggestionPopup.Hide();                                            // Oculta el popup si no hay sugerencias
             }
 
-            UpdateGhostText();
+            UpdateGhostText();                                                      // Actualiza el texto fantasma
         }
 
         /// <summary>
@@ -129,25 +134,25 @@ namespace Wall_E
         /// </summary>
         private void Editor_KeyPress(object? sender, KeyPressEventArgs e)
         {
-            switch (e.KeyChar)
+            switch (e.KeyChar)                                                      // Detecta caracteres de apertura
             {
-                case '(':
+                case '(':                                                           // Paréntesis
                     InsertAutoClose("()");
                     e.Handled = true;
                     break;
-                case '[':
-                    InsertAutoClose("[]");
+                case '[':                                                           // Corchetes
+                    InsertAutoClose("[]");  
                     e.Handled = true;
                     break;
-                case '{':
+                case '{':                                                           // Llaves
                     InsertAutoClose("{}");
                     e.Handled = true;
                     break;
-                case '"':
+                case '"':                                                           // Comillas dobles
                     InsertAutoClose("\"\"");
                     e.Handled = true;
                     break;
-                case '\'':
+                case '\'':                                                          // Comillas simples
                     InsertAutoClose("''");
                     e.Handled = true;
                     break;
@@ -159,11 +164,11 @@ namespace Wall_E
         /// </summary>
         private void Editor_MouseMove(object? sender, MouseEventArgs e)
         {
-            int index = _editor.GetCharIndexFromPosition(e.Location);
-            string word = GetWordAt(index);
-            string? desc = GetDescription(word);
+            int index = _editor.GetCharIndexFromPosition(e.Location);               // Posición del carácter bajo el mouse
+            string word = GetWordAt(index);                                         // Obtiene la palabra completa
+        string? desc = GetDescription(word);                                        // Busca descripción
             if (!string.IsNullOrEmpty(desc))
-                _toolTip.SetToolTip(_editor, desc);
+                _toolTip.SetToolTip(_editor, desc);                                 // Muestra tooltip si existe descripción
         }
 
         /// <summary>
@@ -171,7 +176,7 @@ namespace Wall_E
         /// </summary>
         private void Editor_TextChanged(object? sender, EventArgs e)
         {
-            UpdateGhostText();
+            UpdateGhostText();                                                      // Actualiza sugerencias en texto fantasma
         }
 
         /// <summary>
@@ -179,7 +184,7 @@ namespace Wall_E
         /// </summary>
         private void OnSuggestionSelected(string suggestion)
         {
-            InsertSuggestion(suggestion);
+            InsertSuggestion(suggestion);                                           // Inserta la sugerencia seleccionada
         }
 
         #endregion
@@ -191,24 +196,24 @@ namespace Wall_E
         /// </summary>
         private void InsertSuggestion(string suggestion)
         {
+            _posCursor = _editor.SelectionStart;                                    // Obtiene posición actual del cursor
+            string word = GetCurrentWordBeforeCursor();                             // Palabra parcial a reemplazar
+            
+            // Caso especial para "GoTo" (agrega corchetes adicionales)
             if (suggestion == "GoTo")
             {
-                int pos = _editor.SelectionStart;
-                string word = GetCurrentWordBeforeCursor();
-                _editor.Select(pos - word.Length, word.Length);
+                _editor.Select(_posCursor - word.Length, word.Length);
                 _editor.SelectedText = suggestion + (IsFunction(suggestion) ? "[]()" : "");
-                _editor.SelectionStart = _editor.Text.Length;
-                _suggestionPopup.Hide();
             }
+            // Caso normal
             else
             {
-                int pos = _editor.SelectionStart;
-                string word = GetCurrentWordBeforeCursor();
-                _editor.Select(pos - word.Length, word.Length);
+                _editor.Select(_posCursor - word.Length, word.Length);
                 _editor.SelectedText = suggestion + (IsFunction(suggestion) ? "()" : "");
-                _editor.SelectionStart = _editor.Text.Length;
-                _suggestionPopup.Hide();
             }
+            
+            _editor.SelectionStart = _editor.Text.Length;                           // Mueve cursor al final
+            _suggestionPopup.Hide();                                                // Oculta el popup
         }
 
         /// <summary>
@@ -216,9 +221,9 @@ namespace Wall_E
         /// </summary>
         private void InsertAutoClose(string pair)
         {
-            int pos = _editor.SelectionStart;
-            _editor.SelectedText = pair;
-            _editor.SelectionStart = pos + 1;
+            _posCursor = _editor.SelectionStart;                                    // Obtiene posición actual del cursor
+            _editor.SelectedText = pair;                                            // Inserta ambos caracteres
+            _editor.SelectionStart = _posCursor + 1;                                // Posiciona cursor en medio
         }
 
         /// <summary>
@@ -226,11 +231,12 @@ namespace Wall_E
         /// </summary>
         private string GetCurrentWordBeforeCursor()
         {
-            int pos = _editor.SelectionStart;
-            if (pos == 0) return "";
-            string text = _editor.Text.Substring(0, pos);
+            _posCursor = _editor.SelectionStart;                                    // Obtiene posición actual del cursor
+            if (_posCursor == 0) return "";                                         // Si el cursor está al principio del texto, devuelve vacío
+            string text = _editor.Text.Substring(0, _posCursor);                    // Extrae la palabra antes del cursor
+            // Divide usando varios delimitadoress
             string[] parts = text.Split(new[] { ' ', '\n', '\r', '(', '[', ',', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length > 0 ? parts[^1] : "";
+            return parts.Length > 0 ? parts[^1] : "";                               // Devuelve el último elemento
         }
 
         /// <summary>
@@ -238,11 +244,15 @@ namespace Wall_E
         /// </summary>
         private string GetWordAt(int index)
         {
-            if (index < 0 || index >= _editor.Text.Length) return "";
-            int start = index, end = index;
+            if (index < 0 || index >= _editor.Text.Length) return "";               // Si la posición está fuera de los límites, devuelve vacío
+            int start = index, end = index;                                         // Inicializa índices de inicio y fin
+
+            // Avanza hasta el inicio de la palabra
             while (start > 0 && char.IsLetterOrDigit(_editor.Text[start - 1])) start--;
+            // Avanza hasta el final de la palabra
             while (end < _editor.Text.Length && char.IsLetterOrDigit(_editor.Text[end])) end++;
-            return _editor.Text.Substring(start, end - start);
+
+            return _editor.Text.Substring(start, end - start);                      // Extrae la palabra
         }
 
         /// <summary>
@@ -250,6 +260,7 @@ namespace Wall_E
         /// </summary>
         private string? GetDescription(string word)
         {
+            // Diccionario de descripciones para palabras clave
             return word switch
             {
                 "Spawn" => "Spawn(int x, int y): Posiciona a Wall-E.",
@@ -269,7 +280,7 @@ namespace Wall_E
         /// </summary>
         private bool IsFunction(string word)
         {
-            return _keywords.Contains(word);
+            return _keywords.Contains(word);                                        // Verifica en la lista de palabras clave
         }
 
         /// <summary>
@@ -277,21 +288,28 @@ namespace Wall_E
         /// </summary>
         private void UpdateGhostText()
         {
-            string text = _editor.Text;
-            int pos = _editor.SelectionStart;
-            string prefix = GetCurrentWordBeforeCursor();
+            string text = _editor.Text;                                             // Obtiene el texto completo del editor principal
+            _posCursor = _editor.SelectionStart;                                    // Obtiene posición actual del cursor 
+            string prefix = GetCurrentWordBeforeCursor();                           // Obtiene la palabra parcial que está siendo escrita (antes del cursor)
 
+            // Busca la primera coincidencia entre palabras clave y colores que empiece con el prefijo
+            // (ignorando mayúsculas/minúsculas)
             var match = _keywords.Concat(_colors).FirstOrDefault(k => k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+
+            // Si encontró una coincidencia válida y el match es más largo que el prefijo
             if (!string.IsNullOrEmpty(match) && match.Length > prefix.Length)
             {
-                string ghost = text.Insert(pos, match.Substring(prefix.Length));
+                // Crea texto fantasma con la parte faltante
+                string ghost = text.Insert(_posCursor, match.Substring(prefix.Length));
                 _ghostEditor.Text = ghost;
-                _ghostEditor.Select(pos, match.Length - prefix.Length);
+
+                // Resalta en gris la parte sugerida
+                _ghostEditor.Select(_posCursor, match.Length - prefix.Length);
                 _ghostEditor.SelectionColor = Color.LightGray;
             }
             else
             {
-                _ghostEditor.Text = text;
+                _ghostEditor.Text = text;                                           // Sin sugerencia, muestra texto normal
             }
         }
 

@@ -16,7 +16,7 @@ public class EmptyExpressionError : RuntimeError
     /// <param name="context">Contexto donde se esperaba la expresión.</param>
     /// <param name="line">Línea del código donde ocurrió el error.</param>
     public EmptyExpressionError(string context, int line)
-        : base($"Missing expression in {context}", line) { }
+        : base($"Falta expresión en {context}", line) { }
 
     #endregion
 }

@@ -41,8 +41,6 @@ namespace Wall_E
         public void Execute(Executor executor)
         {
             // Solo evalúa la condición. El salto real se maneja en Executor.Execute.
-            // Si se desea, aquí se puede validar la existencia de la etiqueta,
-            // pero no se debe realizar el salto en este método.
         }
 
         #endregion

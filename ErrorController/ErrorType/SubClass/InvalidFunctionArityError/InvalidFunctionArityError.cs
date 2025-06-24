@@ -18,7 +18,7 @@ public class InvalidFunctionArityError : RuntimeError
     /// <param name="got">Cantidad de argumentos recibidos.</param>
     /// <param name="line">Línea del código donde ocurrió el error.</param>
     public InvalidFunctionArityError(string function, int expected, int got, int line)
-        : base($"Function '{function}' expects {expected} argument(s), but got {got}", line) { }
+        : base($"La función '{function}' esperaba {expected} argumento(s), pero recibió {got}", line) { }
 
     #endregion
 }

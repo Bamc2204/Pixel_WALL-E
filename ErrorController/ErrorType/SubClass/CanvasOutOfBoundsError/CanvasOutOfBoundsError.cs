@@ -42,7 +42,7 @@ public class CanvasOutOfBoundsError : RuntimeError
     /// <param name="height">Alto del canvas.</param>
     /// <param name="line">Línea donde ocurrió el error.</param>
     public CanvasOutOfBoundsError(int x, int y, int width, int height, int line)
-        : base($"Coordinates out of canvas: ({x}, {y}) is not in range [0, {width - 1}] x [0, {height - 1}]", line)
+        :base($"Coordenadas fuera del canvas: ({x}, {y}) no está en el rango [0, {width - 1}] x [0, {height - 1}]", line)
     {
         X = x;
         Y = y;
