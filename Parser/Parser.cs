@@ -69,12 +69,12 @@ namespace Wall_E
                 }
                 catch (RuntimeError ex)
                 {
-                    _errors.Add($"[Parser Error] Línea {ex.Line}: {ex.Message}");
+                    errors.Add($"[Parser Error] Línea {ex.Line}: {ex.Message}");
                     Advance();
                 }
                 catch (Exception ex)
                 {
-                    _errors.Add($"[Parser Error] Línea {Peek().Line}: {ex.Message}");
+                    errors.Add($"[Parser Error] Línea {Peek().Line}: {ex.Message}");
                     Advance();
                 }
             }
@@ -189,6 +189,9 @@ namespace Wall_E
         /// </summary>
         private Expr ParseExpression() => ParseEquality();
 
+        /// <summary>
+        /// Parsea una expresión de igualdad.
+        /// </summary>
         private Expr ParseEquality()
         {
             Expr expr = ParseComparison();
@@ -201,6 +204,9 @@ namespace Wall_E
             return expr;
         }
 
+        /// <summary>
+        /// Parsea una expresión de comparación.
+        /// </summary>
         private Expr ParseComparison()
         {
             Expr expr = ParseAddSubtract();
@@ -265,12 +271,15 @@ namespace Wall_E
                 return expr;
             }
 
+            // Soporta números enteros y decimales
             if (Match(TokenType.NUMBER))
                 return new LiteralExpr { Value = Previous().Lexeme, Line = Previous().Line };
 
+            // Soporta strings
             if (Match(TokenType.STRING))
                 return new LiteralExpr { Value = $"\"{Previous().Lexeme}\"", Line = Previous().Line };
 
+            // Soporta variables y funciones
             if (Match(TokenType.IDENTIFIER) || Match(TokenType.IS_BRUSH_COLOR) || Match(TokenType.GET_ACTUAL_X)
                 || Match(TokenType.GET_ACTUAL_Y) || Match(TokenType.GET_CANVAS_SIZE) || Match(TokenType.GET_COLOR_COUNT)
                 || Match(TokenType.IS_BRUSH_SIZE) || Match(TokenType.IS_CANVAS_COLOR))
@@ -292,6 +301,7 @@ namespace Wall_E
                 return new VariableExpr { Name = name, Line = line };
             }
 
+            // Si no es ninguna de las opciones anteriores, es un error
             throw new InvalidCommandError(Peek().Lexeme, $"Instrucción no válida: '{Peek().Lexeme}'", Peek().Line);
         }
 

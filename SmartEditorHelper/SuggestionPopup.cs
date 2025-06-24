@@ -31,36 +31,40 @@ namespace Wall_E
         public SuggestionPopup()
         {
             #region ListBoxConfiguration
+
             listBox = new ListBox
             {
-                Dock = DockStyle.Fill,
-                Font = new Font("Consolas", 10),
-                TabStop = false // No roba el foco del editor
+                Dock = DockStyle.Fill,                              // Hace que el ListBox ocupe todo el espacio disponible en el formulario
+                Font = new Font("Consolas", 10),                    // Establece la fuente monoespaciada (ideal para código) tamaño 10
+                TabStop = false                                     // Evita que el ListBox pueda recibir foco con la tecla Tab
             };
 
-            listBox.MouseClick += (s, e) => OnSelectItem();
-            listBox.KeyDown += (s, e) =>
+            listBox.MouseClick += (s, e) => OnSelectItem();         // Evento cuando se hace clic con el mouse en el ListBox
+            listBox.KeyDown += (s, e) =>                            // Evento para manejar teclas presionadas mientras el ListBox tiene el foco
             {
                 if (e.KeyCode == Keys.Enter)
                 {
-                    OnSelectItem();
-                    e.Handled = true;
+                    OnSelectItem();                                 // Ejecuta el método para seleccionar el ítem
+                    e.Handled = true;                               // Marca el evento como manejado para evitar procesamiento adicional
                 }
                 else if (e.KeyCode == Keys.Escape)
                 {
-                    this.Hide();
-                    e.Handled = true;
+                    this.Hide();                                    // Oculta el formulario
+                    e.Handled = true;                               // Marca el evento como manejado
                 }
             };
+
             #endregion
 
             #region FormConfiguration
-            FormBorderStyle = FormBorderStyle.None;
-            StartPosition = FormStartPosition.Manual;
-            ShowInTaskbar = false;
-            TopMost = true;
 
-            Controls.Add(listBox);
+            FormBorderStyle = FormBorderStyle.None;                 // Elimina los bordes del formulario
+            StartPosition = FormStartPosition.Manual;               // Permite posicionar el formulario manualmente
+            ShowInTaskbar = false;                                  // Evita que aparezca en la barra de tareas de Windows
+            TopMost = true;                                         // Mantiene el formulario siempre visible sobre otras ventanas
+
+            Controls.Add(listBox);                                  // Agrega el ListBox como control principal del formulario
+
             #endregion
         }
 
@@ -73,23 +77,23 @@ namespace Wall_E
         /// </summary>
         public void SetSuggestions(List<string> suggestions)
         {
-            listBox.DataSource = suggestions;
-            if (suggestions.Count > 0)
-                listBox.SelectedIndex = 0;
+            listBox.DataSource = suggestions;                       // Asigna la lista de sugerencias como origen de datos del ListBox
+            if (suggestions.Count > 0)                              // Si hay sugerencias disponibles
+                listBox.SelectedIndex = 0;                          // Selecciona automáticamente la primera sugerencia
         }
 
         /// <summary>
         /// Devuelve la sugerencia actualmente seleccionada.
         /// </summary>
-        public string GetSelected() => listBox.SelectedItem?.ToString() ?? "";
+        public string GetSelected() => listBox.SelectedItem?.ToString() ?? "";  // Obtiene el texto del ítem seleccionado o cadena vacía si no hay selección
 
         /// <summary>
         /// Selecciona el primer elemento del ListBox.
         /// </summary>
         public void SelectFirst()
         {
-            if (listBox.Items.Count > 0)
-                listBox.SelectedIndex = 0;
+            if (listBox.Items.Count > 0)                            // Verifica si hay elementos en el ListBox
+                listBox.SelectedIndex = 0;                          // Selecciona el primer elemento
         }
 
         /// <summary>
@@ -97,10 +101,10 @@ namespace Wall_E
         /// </summary>
         public void ShowAt(Point caretLocation, Control parentEditor)
         {
-            Location = parentEditor.PointToScreen(caretLocation);
-            Size = new Size(200, 120);
-            Show();
-            parentEditor.Focus(); // Mantiene el foco en el editor
+            Location = parentEditor.PointToScreen(caretLocation);   // Convierte la posición del cursor a coordenadas de pantalla
+            Size = new Size(200, 120);                              // Establece un tamaño fijo para la ventana de sugerencias
+            Show();                                                 // Muestra la ventana
+            parentEditor.Focus();                                   // Mantiene el foco en el editor
         }
 
         /// <summary>
@@ -108,13 +112,13 @@ namespace Wall_E
         /// </summary>
         public void HandleKey(Keys key)
         {
-            if (key == Keys.Down && listBox.SelectedIndex < listBox.Items.Count - 1)
+            if (key == Keys.Down && listBox.SelectedIndex < listBox.Items.Count - 1)    // Si es tecla Abajo y no está en el último elemento
             {
-                listBox.SelectedIndex++;
+                listBox.SelectedIndex++;                            // Mueve la selección hacia abajo
             }
-            else if (key == Keys.Up && listBox.SelectedIndex > 0)
+            else if (key == Keys.Up && listBox.SelectedIndex > 0)   // Si es tecla Arriba y no está en el primer elemento
             {
-                listBox.SelectedIndex--;
+                listBox.SelectedIndex--;                            // Mueve la selección hacia arriba
             }
         }
 
@@ -127,8 +131,8 @@ namespace Wall_E
         /// </summary>
         private void OnSelectItem()
         {
-            SuggestionSelected?.Invoke(GetSelected());
-            Hide();
+            SuggestionSelected?.Invoke(GetSelected());              // Dispara el evento con la sugerencia seleccionada
+            Hide();                                                 // Oculta la ventana de sugerencias
         }
 
         #endregion

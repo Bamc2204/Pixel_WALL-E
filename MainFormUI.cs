@@ -52,211 +52,264 @@ namespace Wall_E
         private void InitializeComponent()
         {
             #region MainWindowConfiguration
-            Text = "Pixel Wall-E IDE";
+
+            // Configuración de la ventana principal
+            Text = "Pixel Wall-E INTERPRETE";
             Width = 1400;
             Height = 900;
             StartPosition = FormStartPosition.CenterScreen;
+
             #endregion
 
             #region MainSplit
+
+            // División principal en dos paneles (izquierdo y derecho)
             mainSplit = new SplitContainer
             {
-                Dock = DockStyle.Fill,
-                Orientation = Orientation.Vertical
+                Dock = DockStyle.Fill,                                  // Ocupa todo el espacio disponible del contenedor padre.
+                Orientation = Orientation.Vertical                      // Divide los paneles verticalmente (izquierda/derecha).
+
             };
             Controls.Add(mainSplit);
+
             #endregion
 
             #region LeftPanel - CodeEditor and Buttons
+
+            // Panel izquierdo: contiene botones y el editor de código
             var editorPanel = new TableLayoutPanel
             {
-                Dock = DockStyle.Fill,
-                RowCount = 2,
-                ColumnCount = 1
+                Dock = DockStyle.Fill,                                  // Ocupa todo el espacio disponible en Panel1.
+                RowCount = 2,                                           // Dos filas.
+                ColumnCount = 1                                         // Una sola columna.
             };
+            // Fila para botones
             editorPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
+            // Fila para el editor
             editorPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+            // Agregar editorPanel al panel izquierdo
             mainSplit.Panel1.Controls.Add(editorPanel);
 
             // Botones de archivo y ejecución
             var fileButtons = new FlowLayoutPanel
             {
-                FlowDirection = FlowDirection.LeftToRight,
-                Dock = DockStyle.Fill
+                FlowDirection = FlowDirection.LeftToRight,              // Botones en horizontal (izq → der).
+                Dock = DockStyle.Fill                                   // Ocupa toda la fila asignada.
             };
 
+            // Creación de botones
             var openButton = new Button { Text = "Open" };
             var saveButton = new Button { Text = "Save" };
             var undoButton = new Button { Text = "Undo" };
             var redoButton = new Button { Text = "Redo" };
             var runButton = new Button { Text = "Run Code" };
 
+            // Agrega las funciones a los botones
             openButton.Click += OpenFile;
             saveButton.Click += SaveFile;
             undoButton.Click += (s, e) => codeEditor.Undo();
             redoButton.Click += (s, e) => codeEditor.Redo();
             runButton.Click += RunCode_Click;
 
+            // Agrega los botones al fileButtons 
             fileButtons.Controls.Add(openButton);
             fileButtons.Controls.Add(saveButton);
             fileButtons.Controls.Add(undoButton);
             fileButtons.Controls.Add(redoButton);
             fileButtons.Controls.Add(runButton);
+
+            // Agregar fileButtons a la primera fila del TableLayoutPanel.
             editorPanel.Controls.Add(fileButtons, 0, 0);
+
             #endregion
 
             #region MainEditor, Ghost and Suggestions
+
             // Panel de números de línea
             lineNumberPanel = new Panel
             {
-                Width = 40,
-                Dock = DockStyle.Left,
-                BackColor = Color.LightGray
+                Width = 40,                                             // Ancho fijo de 40 píxeles.
+                Dock = DockStyle.Left,                                  // Se ancla a la izquierda del contenedor padre.
+                BackColor = Color.LightGray                             // Fondo gris claro.
             };
 
-            // Editor real
+            // Editor de código principal
             codeEditor = new RichTextBox
             {
-                Font = new Font("Consolas", 10),
-                Dock = DockStyle.Fill,
-                Multiline = true,
-                ScrollBars = RichTextBoxScrollBars.Vertical,
-                AcceptsTab = true,
-                BorderStyle = BorderStyle.None
+                Font = new Font("Consolas", 10),                        // Usa fuente monoespaciada (ideal para código).
+                Dock = DockStyle.Fill,                                  // Ocupa todo el espacio restante.
+                Multiline = true,                                       // Permite múltiples líneas.
+                ScrollBars = RichTextBoxScrollBars.Vertical,            // Barra de desplazamiento vertica
+                AcceptsTab = true,                                      // Permite usar la tecla TAB para indentación.
+                BorderStyle = BorderStyle.None                          // Sin borde (estilo minimalista).
             };
 
-            // Editor fantasma
+            // Editor fantasma para mostrar sugerencias en gris claro
             ghostEditor = new RichTextBox
             {
-                Font = codeEditor.Font,
-                Dock = DockStyle.Fill,
-                Multiline = true,
-                ReadOnly = true,
-                BackColor = Color.White,
-                ForeColor = Color.LightGray,
-                BorderStyle = BorderStyle.None,
-                Enabled = false,
-                TabStop = false,
-                ScrollBars = RichTextBoxScrollBars.None,
-                WordWrap = codeEditor.WordWrap,
-                Location = codeEditor.Location,
-                Text = ""
+                Font = codeEditor.Font,                                 // Misma fuente que el editor principal.
+                Dock = DockStyle.Fill,                                  // Ocupa todo el espacio.
+                Multiline = true,                                       // Permite múltiples líneas (como un editor de código real).
+                ReadOnly = true,                                        // No editable.
+                BackColor = Color.White,                                // Fondo blanco.
+                ForeColor = Color.LightGray,                            // Texto gris claro (para sugerencias).
+                BorderStyle = BorderStyle.None,                         // Sin bordes (estilo minimalista).
+                Enabled = false,                                        // No interactuable.
+                TabStop = false,                                        // No recibe foco con TAB.
+                ScrollBars = RichTextBoxScrollBars.None,                // Sin barras de desplazamiento.
+                WordWrap = codeEditor.WordWrap,                         // Mismo ajuste de línea que el editor principal.
+                Location = codeEditor.Location,                         // Misma posición.
+                Text = ""                                               // Vacío inicialmente.
             };
 
-            // Superposición de editores
-            var editorOverlay = new Panel { Dock = DockStyle.Fill };
-            editorOverlay.Controls.Add(ghostEditor);
-            editorOverlay.Controls.Add(codeEditor);
-            codeEditor.BringToFront();
-            ghostEditor.SendToBack();
+            // Superposición de ghostEditor y codeEditor
+            var editorOverlay = new Panel { Dock = DockStyle.Fill };    // Panel contenedor.
+            editorOverlay.Controls.Add(ghostEditor);                    // Agrega el editor fantasma.
+            editorOverlay.Controls.Add(codeEditor);                     // Agrega el editor principal.
+            codeEditor.BringToFront();                                  // Asegura que el editor principal esté encima.
+            ghostEditor.SendToBack();                                   // El fantasma queda detrás.
 
-            // ListBox de sugerencias
+            // ListBox para mostrar sugerencias
             suggestionBox = new ListBox
             {
-                Visible = false,
-                Font = codeEditor.Font,
-                Height = 100,
-                Width = 200
+                Visible = false,                                        // Oculto inicialmente.
+                Font = codeEditor.Font,                                 // Misma fuente.
+                Height = 100,                                           // Altura fija.
+                Width = 200                                             // Ancho fijo.
             };
 
-            // Panel que contiene todo
-            var editorContainer = new Panel { Dock = DockStyle.Fill };
-            editorContainer.Controls.Add(editorOverlay);
-            editorContainer.Controls.Add(lineNumberPanel);
-            editorContainer.Controls.Add(suggestionBox);
+            // Contenedor final del editor, panel de línea y sugerencias
+            var editorContainer = new Panel { Dock = DockStyle.Fill };  // Panel principal.
+            editorContainer.Controls.Add(editorOverlay);                // Agrega la superposición de editores.
+            editorContainer.Controls.Add(lineNumberPanel);              // Agrega el panel de números.
+            editorContainer.Controls.Add(suggestionBox);                // Agrega el ListBox de sugerencias.
 
-            editorPanel.Controls.Add(editorContainer, 0, 1);
+            // Integración con el TableLayoutPanel Padre
+            editorPanel.Controls.Add(editorContainer, 0, 1);            // Columna 0, Fila 1.
+
             #endregion
 
             #region CodeEditorEvents
+
+            // Eventos para actualizar los números de línea
+            // Cada vez que el texto del editor (codeEditor) cambia (se escribe, borra, etc.), se fuerza un redibujado del panel de números (lineNumberPanel).
             codeEditor.TextChanged += (s, e) => lineNumberPanel.Invalidate();
+            // Cuando el usuario desplaza el editor verticalmente (con la rueda del mouse o la barra de desplazamiento), se actualizan los números de línea.
             codeEditor.VScroll += (s, e) => lineNumberPanel.Invalidate();
+            // Si el editor cambia de tamaño (por redimensión de la ventana), se vuelven a dibujar los números para ajustarse al nuevo espacio visible.
             codeEditor.Resize += (s, e) => lineNumberPanel.Invalidate();
+            // Cuando el editor pierde el foco (el usuario hace clic en otro control), se aplica el resaltado de sintaxis (ApplySyntaxHighlighting).
             codeEditor.Leave += (s, e) => ApplySyntaxHighlighting();
 
+            // Evento Paint para dibujar los números de línea a la izquierda
             lineNumberPanel.Paint += (s, e) =>
             {
+                // Obtiene el índice del primer carácter visible en la parte superior del editor.
                 int firstIndex = codeEditor.GetCharIndexFromPosition(new Point(0, 0));
+                // Convierte ese índice en un número de línea.
                 int firstLine = codeEditor.GetLineFromCharIndex(firstIndex);
 
+                // Obtiene el índice del último carácter visible (en la parte inferior del editor).
                 int lastIndex = codeEditor.GetCharIndexFromPosition(new Point(0, codeEditor.ClientSize.Height - 1));
+                // Convierte ese índice en un número de línea.
                 int lastLine = codeEditor.GetLineFromCharIndex(lastIndex);
 
+                // Itera desde la primera línea visible hasta la última línea visible (+1 para cubrir bordes).
                 for (int i = firstLine; i <= lastLine + 1 && i < codeEditor.Lines.Length; i++)
                 {
+                    // Obtiene la coordenada Y (vertical) donde debe dibujarse el número de línea.
                     int y = codeEditor.GetPositionFromCharIndex(codeEditor.GetFirstCharIndexFromLine(i)).Y;
+                    // Dibuja el número (i + 1 porque las líneas empiezan en 0) en gris.
                     e.Graphics.DrawString((i + 1).ToString(), codeEditor.Font, Brushes.Gray, 0, y);
                 }
             };
+
             #endregion
 
             #region RightPanel - Canvas and Console
+
+            // Panel derecho: contiene el canvas y consola
             var rightPanel = new TableLayoutPanel
             {
-                Dock = DockStyle.Fill,
-                RowCount = 3,
-                ColumnCount = 1
+                Dock = DockStyle.Fill,                                  // Ocupa todo el espacio disponible en Panel2 del SplitContainer.
+                RowCount = 3,                                           // Tres filas: canvas, botones y consola.
+                ColumnCount = 1                                         // Una sola columna.
             };
-            rightPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 85f));
-            rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40f));
-            rightPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 15f));
-            mainSplit.Panel2.Controls.Add(rightPanel);
+            rightPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 85f));  // Canvas (85% del espacio).
+            rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40f)); // Botones (altura fija: 40px).
+            rightPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 15f));  // Consola (15% restante).
+            mainSplit.Panel2.Controls.Add(rightPanel);                      // Aquí se coloca el rightPanel con todo su contenido.
 
-            // Scroll para el canvas
+            // Panel con scroll que contiene el canvas
             var canvasScroll = new Panel
             {
-                AutoScroll = true,
-                Dock = DockStyle.Fill,
-                BackColor = Color.LightGray
+                AutoScroll = true,                                      // Habilita barras de desplazamiento si el contenido es grande.
+                Dock = DockStyle.Fill,                                  // Ocupa toda el área asignada (fila 0 del rightPanel).
+                BackColor = Color.LightGray                             // Fondo gris claro.
             };
 
-            pixelCanvas = new PixelCanvas();
-            canvasScroll.Controls.Add(pixelCanvas);
-            rightPanel.Controls.Add(canvasScroll, 0, 0);
+            pixelCanvas = new PixelCanvas();                            // Lienzo personalizado para dibujar.
+            canvasScroll.Controls.Add(pixelCanvas);                     // Añade el canvas al panel con scroll.
+            rightPanel.Controls.Add(canvasScroll, 0, 0);                // Posición: fila 0, columna 0.            
 
-            // Botones de zoom y centrado
+            // Botones de control para el canvas
             var buttonsPanel = new FlowLayoutPanel
             {
-                FlowDirection = FlowDirection.LeftToRight,
-                Dock = DockStyle.Fill
+                FlowDirection = FlowDirection.LeftToRight,              // Botones en fila horizontal.
+                Dock = DockStyle.Fill                                   // Ocupa toda la segunda fila (40px).
             };
 
+            // Botones
             var zoomInButton = new Button { Text = "Zoom +" };
             var zoomOutButton = new Button { Text = "Zoom -" };
             var centerButton = new Button { Text = "Center" };
 
+            // Asignar funciones a los botones
             zoomInButton.Click += (s, e) => pixelCanvas.ZoomIn();
             zoomOutButton.Click += (s, e) => pixelCanvas.ZoomOut();
             centerButton.Click += (s, e) => pixelCanvas.CenterOnCursor(canvasScroll);
 
+            // Añadir botones al Panel
             buttonsPanel.Controls.Add(zoomInButton);
             buttonsPanel.Controls.Add(zoomOutButton);
             buttonsPanel.Controls.Add(centerButton);
             rightPanel.Controls.Add(buttonsPanel, 0, 1);
 
-            // Consola de errores
+            // Consola inferior para mensajes y errores
             wall_EConsole = new TextBox
             {
-                Multiline = true,
-                ReadOnly = true,
-                Dock = DockStyle.Fill,
-                ScrollBars = ScrollBars.Vertical,
-                BackColor = Color.LightYellow,
-                ForeColor = Color.DarkRed,
-                Font = new Font("Consolas", 9)
+                Multiline = true,                                       // Permite múltiples líneas.
+                ReadOnly = true,                                        // No editable (solo lectura).
+                Dock = DockStyle.Fill,                                  // Ocupa toda la tercera fila (15%).
+                ScrollBars = ScrollBars.Vertical,                       // Barra de desplazamiento vertical.
+                BackColor = Color.LightYellow,                          // Fondo amarillo claro.
+                ForeColor = Color.DarkRed,                              // Texto en rojo oscuro.
+                Font = new Font("Consolas", 9)                          // Fuente monoespaciada (ideal para logs)
             };
-            rightPanel.Controls.Add(wall_EConsole, 0, 2);
+            rightPanel.Controls.Add(wall_EConsole, 0, 2);               // Fila 2, columna 0.
+
             #endregion
 
             #region SmartEditorHelper: Autocomplete and Suggestions
-            var colors = new List<string> { "Red", "Green", "Blue", "Black", "White", "Yellow", "Gray", "Purple", "Cyan", "Transparent" };
 
-            // Inicializar SuggestionPopup
+            // Paleta de colores permitidos
+            var colors = new List<string> { "\"Red\"", "\"Green\"", "\"Blue\"", "\"Black\"", "\"White\"", "\"Yellow\"", "\"Gray\"", "\"Purple\"", "\"Cyan\"", "\"Transparent\"" };
+
+            // Inicialización del autocompletado inteligente
             SuggestionPopup suggestionPopup = new SuggestionPopup();
-            var keywords = new[] { "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle", "Fill", "GoTo", "GetActualX", "GetActualY", "GetCanvasSize", "GetColorCount", "IsBrushColor", "IsBrushSize", "IsCanvasColor" };
+            var keywords = new[]
+            {
+                "Spawn", "Color", "Size", "DrawLine", "DrawCircle", "DrawRectangle",
+                "Fill", "GoTo", "GetActualX", "GetActualY", "GetCanvasSize",
+                "GetColorCount", "IsBrushColor", "IsBrushSize", "IsCanvasColor"
+            };
+
+            // Configuración del asistente inteligente
             SmartEditorHelper helper = new SmartEditorHelper(codeEditor, ghostEditor, suggestionPopup, keywords, colors);
+
             #endregion
         }
+
 
         #endregion
 
@@ -276,10 +329,6 @@ namespace Wall_E
                 string input = codeEditor.Text;
                 var lexer = new Lexer(input);
                 List<Token> tokens = lexer.Tokenize();
-
-                // Muestra los tokens generados (para depuración)
-                // foreach (var t in tokens)
-                //     MessageBox.Show($"{t.Type} '{t.Lexeme}' línea {t.Line}");
 
                 var errors = new List<string>();
                 var parser = new Parser(tokens, errors);
@@ -322,9 +371,11 @@ namespace Wall_E
             {
                 Filter = "WLE Files (*.pw)|*.pw|All Files (*.*)|*.*"
             };
-
+            // Muestra un cuadro de diálogo para abrir un archivo. Si el usuario pulsa "Aceptar"
             if (dialog.ShowDialog() == DialogResult.OK)
+                // Entonces, lee todo el contenido del archivo seleccionado y lo muestra en el editor de texto.
                 codeEditor.Text = File.ReadAllText(dialog.FileName);
+
         }
 
         /// <summary>
@@ -332,12 +383,21 @@ namespace Wall_E
         /// </summary>
         private void SaveFile(object sender, EventArgs e)
         {
+            // Crea un diálogo para guardar un archivo con el filtro "WLE Files (*.pw)|*.pw|Todos los archivos (*.*)|*.*"
             using var dialog = new SaveFileDialog
             {
                 Filter = "WLE Files (*.pw)|*.pw|All Files (*.*)|*.*"
             };
 
+            // Genera nombre por defecto tipo "Wall_E"
+            string fileName = "Wall_E";
+
+            // Asigna el nombre por defecto al diálogo
+            dialog.FileName = Path.GetFileName(fileName);
+
+            // Si el usuario selecciona una ubicación y pulsa "Guardar":
             if (dialog.ShowDialog() == DialogResult.OK)
+                // Escribe el texto actual del editor (codeEditor.Text) en el archivo seleccionado.
                 File.WriteAllText(dialog.FileName, codeEditor.Text);
         }
 

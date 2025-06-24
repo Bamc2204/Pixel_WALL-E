@@ -64,11 +64,11 @@ namespace Wall_E
         /// </summary>
         public string Operator { get; set; }
         /// <summary>
-        /// Operando izquierdo.
+        /// Expresion izquierdo (numero, booleano, variable, etc.).
         /// </summary>
         public Expr Left { get; set; }
         /// <summary>
-        /// Operando derecho.
+        /// Expresión derecho (numero, booleano, variable, etc.).
         /// </summary>
         public Expr Right { get; set; }
     }
@@ -77,11 +77,21 @@ namespace Wall_E
 
     #region UnaryExpression
         
-        public class UnaryExpr : Expr
-        {
-            public Token Operator { get; set; }
-            public Expr Right { get; set; }
-        }
+    /// <summary>
+    /// Representa una operación unaria, como negación, factorial, etc.
+    /// Ejemplo: (-x), (x!)
+    /// </summary>
+    public class UnaryExpr : Expr
+    {
+        /// <summary>
+        /// Operador de la expresión ("-", "+", "!", etc.).
+        /// </summary>
+        public Token Operator { get; set; }
+        /// <summary>
+        /// Expresión a la que se aplica la operación.
+        /// </summary>
+        public Expr Right { get; set; }
+    }
 
 
     #endregion
