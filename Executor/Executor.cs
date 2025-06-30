@@ -284,7 +284,6 @@ namespace Wall_E
                     // Obtener el color del canvas y comparar por ARGB
                     Color pixelColor = Canvas.GetPixelColor(x, y, f.Line);
                     var a = pixelColor.ToArgb() == expectedColor.ToArgb() ? 1 : 0;
-                    System.Windows.Forms.MessageBox.Show($"{a}");
                     return a;
 
                 default:
