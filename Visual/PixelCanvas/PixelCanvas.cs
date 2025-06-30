@@ -15,7 +15,7 @@ namespace Wall_E
         #region Fields
 
         // Tamaño de cada píxel en pantalla.
-        private int _pixelSize = 5;
+        private int _pixelSize = 6;
         // Matriz de colores de los píxeles.
         private readonly int[,] _pixels;
         // Número de columnas y filas del canvas.
@@ -352,7 +352,7 @@ namespace Wall_E
         /// </summary>
         public void ZoomOut()
         {
-            if (_pixelSize > 4)
+            if (_pixelSize > 2)
             {
                 _pixelSize -= 2;
                 Width = _cols * _pixelSize;
