@@ -228,7 +228,7 @@ namespace Wall_E
                     return Canvas.GetCursorY();
 
                 case "GetCanvasSize":
-                    return Canvas.Cols * Canvas.Rows;
+                    return Canvas.Cols;
 
                 case "GetColorCount":
                     string colorName = EvaluateExpression(f.Arguments[0]).ToString()!.Trim('"');

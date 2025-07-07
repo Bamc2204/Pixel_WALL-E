@@ -240,8 +240,20 @@ namespace Wall_E
         /// </summary>
         private Expr ParseMultiply()
         {
+            Expr expr = ParsePower();
+            while (Match(TokenType.MULTIPLY) || Match(TokenType.DIVIDE) )
+            {
+                string op = Previous().Lexeme;
+                Expr right = ParsePower();
+                expr = new BinaryExpr { Operator = op, Left = expr, Right = right, Line = expr.Line };
+            }
+            return expr;
+        }
+
+        private Expr ParsePower()
+        {
             Expr expr = ParsePrimary();
-            while (Match(TokenType.MULTIPLY) || Match(TokenType.DIVIDE) || Match(TokenType.MOD) || Match(TokenType.POWER))
+            while (Match(TokenType.POWER) || Match(TokenType.MOD))
             {
                 string op = Previous().Lexeme;
                 Expr right = ParsePrimary();
