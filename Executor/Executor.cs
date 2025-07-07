@@ -222,15 +222,24 @@ namespace Wall_E
             switch (f.FunctionName)
             {
                 case "GetActualX":
+                    if (f.Arguments.Count != 0)
+                        throw new InvalidFunctionArityError("GetActualX", 0, f.Arguments.Count, f.Line);
                     return Canvas.GetCursorX();
 
                 case "GetActualY":
+                    if (f.Arguments.Count != 0)
+                        throw new InvalidFunctionArityError("GetActualY", 0, f.Arguments.Count, f.Line);
                     return Canvas.GetCursorY();
 
                 case "GetCanvasSize":
+                    if (f.Arguments.Count != 0)
+                        throw new InvalidFunctionArityError("GetCanvasSize", 0, f.Arguments.Count, f.Line);
                     return Canvas.Cols;
 
                 case "GetColorCount":
+                    if (f.Arguments.Count != 5)
+                        throw new InvalidFunctionArityError("GetColorCount", 5, f.Arguments.Count, f.Line);
+
                     string colorName = EvaluateExpression(f.Arguments[0]).ToString()!.Trim('"');
                     if (!Enum.TryParse<KnownColor>(colorName, true, out var knownColor))
                         return 0;
@@ -242,15 +251,20 @@ namespace Wall_E
 
                     return Canvas.CountColorPixels(Color.FromKnownColor(knownColor), x1, y1, x2, y2, f.Line);
 
-
                 case "IsBrushColor":
-                    return f.Arguments.Count == 1 && f.Arguments[0] is LiteralExpr litColor &&
-                           BrushColor.Name.Equals(litColor.Value.Trim('"'), StringComparison.OrdinalIgnoreCase)
-                           ? 1 : 0;
+                    if (f.Arguments.Count != 1)
+                        throw new InvalidFunctionArityError("IsBrushColor", 1, f.Arguments.Count, f.Line);
+
+                    return f.Arguments[0] is LiteralExpr litColor &&
+                        BrushColor.Name.Equals(litColor.Value.Trim('"'), StringComparison.OrdinalIgnoreCase)
+                        ? 1 : 0;
 
                 case "IsBrushSize":
-                    return f.Arguments.Count == 1 && f.Arguments[0] is LiteralExpr litSize &&
-                           int.TryParse(litSize.Value, out int s) && s == BrushSize ? 1 : 0;
+                    if (f.Arguments.Count != 1)
+                        throw new InvalidFunctionArityError("IsBrushSize", 1, f.Arguments.Count, f.Line);
+
+                    return f.Arguments[0] is LiteralExpr litSize &&
+                        int.TryParse(litSize.Value, out int s) && s == BrushSize ? 1 : 0;
 
                 case "IsCanvasColor":
                     if (f.Arguments.Count != 3)
@@ -281,15 +295,14 @@ namespace Wall_E
                         return 0;
                     }
 
-                    // Obtener el color del canvas y comparar por ARGB
                     Color pixelColor = Canvas.GetPixelColor(x, y, f.Line);
-                    var a = pixelColor.ToArgb() == expectedColor.ToArgb() ? 1 : 0;
-                    return a;
+                    return pixelColor.ToArgb() == expectedColor.ToArgb() ? 1 : 0;
 
                 default:
                     throw new FunctionNotImplementedError(f.FunctionName, f.Line);
             }
         }
+
 
         /// <summary>
         /// Evalúa una condición booleana a partir de una expresión.
